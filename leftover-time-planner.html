@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leftover Time Planner</title>
+<style>
+  /* ── Reset & Tokens ───────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f7fa; --surface: #ffffff; --surface2: #eef1f6;
+    --border: #d8dde8; --text: #1a1f36; --text2: #5a607a;
+    --accent: #4f6ef7; --accent-h: #3b57e0; --danger: #e53e3e;
+    --warn: #d97706; --ok: #22c55e; --sleep: #818cf8; --travel: #f97316;
+    --class: #06b6d4; --study: #22c55e; --free: #e2e8f0;
+    --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,.08);
+    --transition: .2s ease;
+  }
+  [data-theme="dark"] {
+    --bg: #0f1117; --surface: #1a1d2e; --surface2: #242740;
+    --border: #2e3250; --text: #e8ecf5; --text2: #8891b2;
+    --accent: #6678ff; --accent-h: #7a8bff; --danger: #f87171;
+    --warn: #fbbf24; --ok: #4ade80; --sleep: #a5b4fc; --travel: #fb923c;
+    --class: #22d3ee; --study: #4ade80; --free: #2a2d45;
+    --shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+  html { font-size: 15px; scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.55;
+    min-height: 100vh; transition: background var(--transition), color var(--transition);
+  }
+
+  /* ── Layout ───────────────────────────────────────────────────────── */
+  .app-shell { display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: .6rem 1.2rem; display: flex; align-items: center; gap: .8rem;
+    position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow);
+  }
+  .topbar h1 { font-size: 1.1rem; font-weight: 700; color: var(--accent); flex: 1; }
+  .topbar .user-label { font-size: .8rem; color: var(--text2); max-width: 180px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .content { flex: 1; padding: 1rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+  .two-col { display: grid; grid-template-columns: 380px 1fr; gap: 1rem; align-items: start; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── Cards / Sections ─────────────────────────────────────────────── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+  }
+  .card h2 { font-size: .95rem; font-weight: 700; margin-bottom: .8rem;
+    color: var(--text); display: flex; align-items: center; gap: .4rem; }
+  .card h3 { font-size: .85rem; font-weight: 600; margin: .6rem 0 .4rem; color: var(--text2); }
+
+  /* ── Day Bar ──────────────────────────────────────────────────────── */
+  .day-bar-wrap { background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: .8rem 1rem; margin-bottom: 1rem;
+    box-shadow: var(--shadow); }
+  .day-bar-label { font-size: .78rem; font-weight: 700; margin-bottom: .4rem;
+    color: var(--text2); letter-spacing: .05em; text-transform: uppercase; }
+  .day-bar { display: flex; border-radius: 6px; overflow: hidden; height: 28px; }
+  .day-bar-seg { height: 100%; display: flex; align-items: center;
+    justify-content: center; font-size: .67rem; font-weight: 700;
+    color: #fff; overflow: hidden; white-space: nowrap; transition: width var(--transition); }
+  .seg-sleep { background: var(--sleep); }
+  .seg-travel { background: var(--travel); }
+  .seg-class  { background: var(--class); }
+  .seg-study  { background: var(--study); }
+  .seg-free   { background: var(--free); color: var(--text2); }
+  .day-bar-legend { display: flex; flex-wrap: wrap; gap: .4rem .8rem; margin-top: .5rem; }
+  .leg-item { display: flex; align-items: center; gap: .3rem; font-size: .75rem; color: var(--text2); }
+  .leg-dot  { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── Forms ────────────────────────────────────────────────────────── */
+  .form-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .6rem; }
+  label { font-size: .82rem; font-weight: 600; color: var(--text2);
+    display: flex; flex-direction: column; gap: .2rem; }
+  label span.req { color: var(--danger); }
+  input[type="text"], input[type="email"], input[type="password"],
+  input[type="time"], input[type="number"], input[type="date"],
+  select, textarea {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: .85rem;
+    padding: .4rem .6rem; outline: none; width: 100%;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,110,247,.18);
+  }
+  input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+  .err { font-size: .78rem; color: var(--danger); margin-top: .25rem; display: block; }
+  .hint { font-size: .78rem; color: var(--text2); margin-top: .25rem; }
+
+  /* ── Buttons ──────────────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; gap: .35rem;
+    border: none; border-radius: 7px; cursor: pointer;
+    font-size: .85rem; font-weight: 600; padding: .45rem .9rem;
+    transition: background var(--transition), transform var(--transition);
+  }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-h); }
+  .btn-ghost  { background: var(--surface2); color: var(--text); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+  .btn-danger:hover { background: var(--danger); color: #fff; }
+  .btn-sm { padding: .28rem .6rem; font-size: .78rem; }
+  .btn-icon { padding: .3rem .4rem; border-radius: 5px; }
+  .icon { font-size: 1rem; line-height: 1; }
+
+  /* ── Auth Page ────────────────────────────────────────────────────── */
+  #auth-page {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; background: var(--bg); padding: 1rem;
+  }
+  .auth-box { background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 2rem; width: 100%; max-width: 380px;
+    box-shadow: var(--shadow); }
+  .auth-box h1 { text-align: center; font-size: 1.3rem; margin-bottom: .3rem; color: var(--accent); }
+  .auth-box .sub { text-align: center; font-size: .82rem; color: var(--text2); margin-bottom: 1.2rem; }
+  .tab-row { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 1.2rem; }
+  .tab { flex: 1; background: none; border: none; border-bottom: 3px solid transparent;
+    cursor: pointer; font-size: .9rem; font-weight: 600; padding: .6rem;
+    color: var(--text2); margin-bottom: -2px; transition: color var(--transition); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .auth-form > * + * { margin-top: .8rem; }
+  .auth-msg { text-align: center; padding: .5rem; border-radius: 6px; font-size: .84rem; }
+  .auth-msg.ok  { background: rgba(34,197,94,.12); color: var(--ok); }
+  .auth-msg.err-box { background: rgba(229,62,62,.1); color: var(--danger); }
+
+  /* ── Tabs inside app ─────────────────────────────────────────────── */
+  .section-tabs { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .8rem; }
+  .stab { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px;
+    color: var(--text2); font-size: .82rem; font-weight: 600; padding: .3rem .7rem;
+    cursor: pointer; transition: background var(--transition), color var(--transition); }
+  .stab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .stab-panel { display: none; }
+  .stab-panel.active { display: block; }
+
+  /* ── Timetable list ───────────────────────────────────────────────── */
+  .class-list { display: flex; flex-direction: column; gap: .4rem; margin-bottom: .6rem; }
+  .class-item {
+    display: flex; align-items: center; gap: .4rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 7px; padding: .4rem .6rem; font-size: .82rem;
+  }
+  .class-item .ci-day { background: var(--accent); color: #fff; border-radius: 4px;
+    padding: .1rem .35rem; font-size: .72rem; font-weight: 700; flex-shrink: 0; }
+  .class-item .ci-sub { font-weight: 600; flex: 1; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; }
+  .class-item .ci-time { color: var(--text2); font-size: .78rem; flex-shrink: 0; }
+
+  /* ── Subject list ─────────────────────────────────────────────────── */
+  .subj-list { display: flex; flex-direction: column; gap: .4rem; margin-bottom: .6rem; }
+  .subj-item {
+    display: grid; grid-template-columns: 1fr auto auto; align-items: center;
+    gap: .5rem; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 7px; padding: .45rem .6rem; font-size: .82rem;
+  }
+  .subj-name { font-weight: 600; }
+  .strength-badge {
+    font-size: .7rem; font-weight: 700; border-radius: 4px; padding: .1rem .3rem;
+  }
+  .s-weak   { background: rgba(229,62,62,.15); color: var(--danger); }
+  .s-avg    { background: rgba(217,119,6,.15); color: var(--warn); }
+  .s-strong { background: rgba(34,197,94,.15); color: var(--ok); }
+
+  /* ── Study Plan ───────────────────────────────────────────────────── */
+  .plan-day-label {
+    font-size: .78rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text2); margin: .6rem 0 .4rem;
+  }
+  .block-list { display: flex; flex-direction: column; gap: .35rem; }
+  .study-block {
+    display: flex; align-items: center; gap: .6rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: .5rem .7rem; transition: background var(--transition);
+  }
+  .study-block.done {
+    background: rgba(34,197,94,.08); border-color: rgba(34,197,94,.3);
+  }
+  .study-block.done .sb-title { text-decoration: line-through; color: var(--text2); }
+  .sb-check { flex-shrink: 0; }
+  .sb-info { flex: 1; min-width: 0; }
+  .sb-title { font-weight: 600; font-size: .85rem; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; }
+  .sb-time { font-size: .76rem; color: var(--text2); }
+  .break-block {
+    text-align: center; font-size: .75rem; color: var(--text2);
+    padding: .15rem 0; border-top: 1px dashed var(--border);
+    border-bottom: 1px dashed var(--border); margin: .1rem 0;
+  }
+
+  /* ── Progress bars ────────────────────────────────────────────────── */
+  .prog-wrap { margin: .3rem 0; }
+  .prog-label { display: flex; justify-content: space-between; font-size: .78rem;
+    color: var(--text2); margin-bottom: .2rem; }
+  .prog-track { background: var(--surface2); border-radius: 100px; height: 8px;
+    overflow: hidden; border: 1px solid var(--border); }
+  .prog-fill { height: 100%; background: var(--accent); border-radius: 100px;
+    transition: width .4s ease; min-width: 0; }
+  .prog-fill.ok { background: var(--ok); }
+  .prog-fill.warn { background: var(--warn); }
+
+  /* ── Banner ───────────────────────────────────────────────────────── */
+  .banner {
+    display: flex; align-items: flex-start; gap: .6rem;
+    border-radius: 8px; padding: .6rem .8rem; font-size: .83rem; margin-bottom: .6rem;
+  }
+  .banner.leftout { background: rgba(229,62,62,.08); border: 1px solid rgba(229,62,62,.2); color: var(--danger); }
+  .banner.info { background: rgba(79,110,247,.08); border: 1px solid rgba(79,110,247,.2); color: var(--accent); }
+  .banner-icon { font-size: 1rem; flex-shrink: 0; margin-top: .05rem; }
+
+  /* ── Empty state ──────────────────────────────────────────────────── */
+  .empty {
+    text-align: center; padding: 1.5rem 1rem;
+    color: var(--text2); font-size: .85rem;
+  }
+  .empty .e-icon { font-size: 2rem; margin-bottom: .4rem; }
+  .empty .e-title { font-weight: 700; color: var(--text); font-size: .9rem; }
+
+  /* ── Misc ─────────────────────────────────────────────────────────── */
+  hr { border: none; border-top: 1px solid var(--border); margin: .8rem 0; }
+  .row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .spacer { flex: 1; }
+  .text-sm { font-size: .8rem; color: var(--text2); }
+  .bold { font-weight: 700; }
+  .hidden { display: none !important; }
+
+  /* ── Spinner ──────────────────────────────────────────────────────── */
+  .spinner {
+    width: 20px; height: 20px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin .7s linear infinite; display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Reminder toggle ─────────────────────────────────────────────── */
+  .toggle-row { display: flex; align-items: center; gap: .5rem; font-size: .83rem; }
+  .toggle {
+    position: relative; width: 36px; height: 20px;
+    border-radius: 100px; background: var(--border);
+    cursor: pointer; transition: background var(--transition); flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-knob {
+    position: absolute; left: 2px; top: 2px; width: 16px; height: 16px;
+    border-radius: 50%; background: #fff;
+    transition: transform var(--transition), box-shadow var(--transition);
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .toggle input:checked ~ .toggle-knob { transform: translateX(16px); }
+  .toggle:has(input:checked) { background: var(--accent); }
+
+  /* ── Loading overlay ─────────────────────────────────────────────── */
+  #loading-overlay {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .8rem; z-index: 9999;
+  }
+  #loading-overlay .l-title { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+
+  /* ── RESPONSIVE tweaks ───────────────────────────────────────────── */
+  @media (max-width: 500px) {
+    .topbar h1 { font-size: .95rem; }
+    .content { padding: .6rem; }
+    .card { padding: .75rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay">
+  <div class="spinner" style="width:36px;height:36px;border-width:4px;"></div>
+  <div class="l-title">⏳ Leftover Time Planner</div>
+  <div class="text-sm">Loading…</div>
+</div>
+
+<!-- Auth Page -->
+<div id="auth-page" class="hidden">
+  <div class="auth-box">
+    <h1>⏳ Leftover Time Planner</h1>
+    <p class="sub">Turn your free hours into focused study sessions</p>
+    <div class="tab-row" role="tablist" aria-label="Authentication">
+      <button class="tab active" role="tab" aria-selected="true" onclick="showAuthTab('signin')" id="tab-signin">Sign in</button>
+      <button class="tab" role="tab" aria-selected="false" onclick="showAuthTab('signup')" id="tab-signup">Create account</button>
+    </div>
+    <!-- Sign In -->
+    <form id="signin-form" class="auth-form" onsubmit="doSignIn(event)" novalidate>
+      <label>Email <span class="req">*</span>
+        <input type="email" id="si-email" autocomplete="email" required placeholder="you@university.edu">
+      </label>
+      <label>Password <span class="req">*</span>
+        <input type="password" id="si-pass" autocomplete="current-password" required placeholder="Your password">
+      </label>
+      <div id="si-msg"></div>
+      <button class="btn btn-primary" style="width:100%" type="submit" id="si-btn">Sign in</button>
+    </form>
+    <!-- Sign Up -->
+    <form id="signup-form" class="auth-form hidden" onsubmit="doSignUp(event)" novalidate>
+      <label>Email <span class="req">*</span>
+        <input type="email" id="su-email" autocomplete="email" required placeholder="you@university.edu">
+      </label>
+      <label>Password <span class="req">*</span>
+        <input type="password" id="su-pass" autocomplete="new-password" required placeholder="Min 6 characters">
+      </label>
+      <label>Confirm password <span class="req">*</span>
+        <input type="password" id="su-pass2" autocomplete="new-password" required placeholder="Repeat password">
+      </label>
+      <div id="su-msg"></div>
+      <button class="btn btn-primary" style="width:100%" type="submit" id="su-btn">Create account</button>
+    </form>
+    <hr style="margin:.8rem 0">
+    <div style="text-align:center">
+      <button class="btn btn-ghost btn-sm" onclick="enterLocalMode()" style="font-size:.8rem;color:var(--text2)">
+        🔓 Try without an account <span style="font-size:.72rem;opacity:.7">(local only)</span>
+      </button>
+    </div>
+    <div class="row" style="margin-top:.6rem;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark/light">🌙</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app-page" class="app-shell hidden">
+  <header class="topbar">
+    <h1>⏳ Leftover Time Planner</h1>
+    <span class="user-label" id="user-email-label"></span>
+    <button class="btn btn-ghost btn-sm btn-icon" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Dark/Light">🌙</button>
+    <button class="btn btn-ghost btn-sm" onclick="doSignOut()">Sign out</button>
+  </header>
+
+  <main class="content">
+    <!-- Day Bar -->
+    <div class="day-bar-wrap" aria-label="Today's time breakdown">
+      <div class="day-bar-label">Today's time split</div>
+      <div class="day-bar" id="day-bar" role="img" aria-label="Visual bar showing today's schedule"></div>
+      <div class="day-bar-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:var(--sleep)"></div> Sleep</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--travel)"></div> Travel</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--class)"></div> Classes</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--study)"></div> Study</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--free)"></div> Free</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- LEFT COLUMN: Setup -->
+      <div>
+        <!-- Daily Settings -->
+        <div class="card">
+          <h2>⚙️ Daily Settings</h2>
+          <div class="form-row">
+            <label style="flex:1">Wake-up time
+              <input type="time" id="wake" value="06:30" oninput="settingsChanged()">
+            </label>
+            <label style="flex:1">Bedtime
+              <input type="time" id="bed" value="22:30" oninput="settingsChanged()">
+            </label>
+          </div>
+          <div class="form-row">
+            <label style="flex:1">Travel to college (min)
+              <input type="number" id="travel-to" value="45" min="0" max="300" oninput="settingsChanged()">
+            </label>
+            <label style="flex:1">Travel home (min)
+              <input type="number" id="travel-home" value="45" min="0" max="300" oninput="settingsChanged()">
+            </label>
+          </div>
+          <div class="form-row">
+            <label style="flex:1">Dinner duration (min)
+              <input type="number" id="dinner-dur" value="30" min="0" max="120" oninput="settingsChanged()">
+            </label>
+            <label style="flex:1">Evening reminder
+              <div class="toggle-row" style="margin-top:.3rem">
+                <label class="toggle" title="Enable/disable evening reminder">
+                  <input type="checkbox" id="reminder-toggle" onchange="toggleReminder()">
+                  <span class="toggle-knob"></span>
+                </label>
+                <span id="reminder-status" class="text-sm">Off</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Subjects -->
+        <div class="card">
+          <h2>📚 Subjects</h2>
+          <div id="subj-list" class="subj-list"></div>
+          <form onsubmit="addSubject(event)" novalidate>
+            <div class="form-row">
+              <label style="flex:1">Subject name
+                <input type="text" id="subj-name" placeholder="e.g. Data Structures" maxlength="50" required>
+              </label>
+              <label style="flex:1">Strength
+                <select id="subj-str">
+                  <option value="weak">Weak 😰</option>
+                  <option value="average" selected>Average 😐</option>
+                  <option value="strong">Strong 💪</option>
+                </select>
+              </label>
+            </div>
+            <div class="form-row">
+              <label style="flex:1">Weekly goal (hrs)
+                <input type="number" id="subj-goal" value="3" min="0.5" max="40" step="0.5">
+              </label>
+              <label style="flex:1">Exam date (optional)
+                <input type="date" id="subj-exam">
+              </label>
+            </div>
+            <div id="subj-err" class="err hidden"></div>
+            <button class="btn btn-primary btn-sm" type="submit">➕ Add subject</button>
+          </form>
+        </div>
+
+        <!-- Timetable -->
+        <div class="card">
+          <h2>📅 College Timetable</h2>
+          <div id="class-list" class="class-list"></div>
+          <form onsubmit="addClass(event)" novalidate>
+            <div class="form-row">
+              <label style="flex:1">Day
+                <select id="cl-day">
+                  <option value="Mon">Monday</option>
+                  <option value="Tue">Tuesday</option>
+                  <option value="Wed">Wednesday</option>
+                  <option value="Thu">Thursday</option>
+                  <option value="Fri">Friday</option>
+                  <option value="Sat">Saturday</option>
+                </select>
+              </label>
+              <label style="flex:1">Subject
+                <select id="cl-subj"><option value="">— pick subject —</option></select>
+              </label>
+            </div>
+            <div class="form-row">
+              <label style="flex:1">Start
+                <input type="time" id="cl-start" value="09:00">
+              </label>
+              <label style="flex:1">End
+                <input type="time" id="cl-end" value="10:00">
+              </label>
+            </div>
+            <div id="cl-err" class="err hidden"></div>
+            <button class="btn btn-primary btn-sm" type="submit">➕ Add class</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Plan & Goals -->
+      <div>
+        <!-- Goals Banner -->
+        <div id="leftout-banner"></div>
+
+        <!-- Today's Goal -->
+        <div class="card" id="today-goal-card">
+          <h2>🎯 Today's Goal</h2>
+          <div id="today-goal-content">
+            <div class="empty">
+              <div class="e-icon">📋</div>
+              <div class="e-title">No plan yet</div>
+              <div>Add subjects &amp; settings to generate a plan.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly Goals -->
+        <div class="card">
+          <h2>📊 Weekly Goals</h2>
+          <div id="weekly-goals-content">
+            <div class="empty"><div class="e-icon">📈</div><div class="e-title">Add subjects to track progress</div></div>
+          </div>
+        </div>
+
+        <!-- Study Plan -->
+        <div class="card">
+          <div class="row" style="margin-bottom:.8rem">
+            <h2 style="margin:0">🗓️ Study Plan</h2>
+            <div class="spacer"></div>
+            <button class="btn btn-ghost btn-sm" onclick="regeneratePlan()">🔄 Regenerate</button>
+          </div>
+          <div class="section-tabs" id="plan-day-tabs"></div>
+          <div id="plan-content">
+            <div class="empty">
+              <div class="e-icon">✏️</div>
+              <div class="e-title">Your study plan will appear here</div>
+              <div>Add at least one subject and configure your daily settings.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+// ══════════════════════════════════════════════════════════════════════════════
+//  FIREBASE CONFIGURATION  — swap the config block below to change projects
+// ══════════════════════════════════════════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, getDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBUu3RUXFj-wtHvOigftPqUkObI7jCZeHw",          // ← replace
+  authDomain: "time-manager-57eb9.firebaseapp.com",
+  projectId: "time-manager-57eb9",
+  storageBucket: "time-manager-57eb9.appspot.com",
+  messagingSenderId: "644394466246",                    // ← replace
+  appId: "1:644394466246:web:40c8a8a0cb026ba9acd0c7"      // ← replace
+};
+
+const fbApp  = initializeApp(FIREBASE_CONFIG);
+const auth   = getAuth(fbApp);
+const db     = getFirestore(fbApp);
+
+// Expose to global scope so non-module JS can call them
+window._firebase = { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, doc, setDoc, getDoc, onSnapshot };
+
+// ── Auth state listener ────────────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  window._currentUser = user || null;
+  if (user) {
+    window._onLogin(user);
+  } else {
+    window._onLogout();
+  }
+});
+</script>
+
+<script>
+"use strict";
+// ══════════════════════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════════════════════
+const DEFAULT_SETTINGS = {
+  wake: "06:30", bed: "22:30", travelTo: 45, travelHome: 45,
+  dinnerDur: 30, reminder: false
+};
+let state = {
+  settings: { ...DEFAULT_SETTINGS },
+  subjects: [],         // { id, name, strength, goal, examDate }
+  classes: [],          // { id, day, subjectId, start, end }
+  plan: {},             // { YYYY-MM-DD: [ block... ] }
+  completions: {},      // { blockId: true }
+  weeklyHours: {},      // { subjectId: minutesDone_this_week }
+};
+let _unsub = null;      // Firestore listener unsubscribe
+let _reminderTimer = null;
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const uid  = () => Math.random().toString(36).slice(2,10);
+const today = () => new Date().toISOString().slice(0,10);
+const pad2  = n => String(n).padStart(2,"0");
+const toMin = t => { const [h,m]=t.split(":").map(Number); return h*60+m; };
+const fromMin= m => `${pad2(Math.floor(m/60)%24)}:${pad2(m%60)}`;
+const dayName= d => ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d];
+const getWeekStart = () => {
+  const d = new Date(); d.setHours(0,0,0,0);
+  const dow = d.getDay(); // 0=Sun
+  d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1)); // Monday
+  return d.toISOString().slice(0,10);
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  THEME
+// ══════════════════════════════════════════════════════════════════════════════
+(function initTheme() {
+  const saved = localStorage.getItem("ltp-theme") ||
+    (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", saved);
+})();
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("ltp-theme", next);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  AUTH HELPERS (call firebase from non-module scope)
+// ══════════════════════════════════════════════════════════════════════════════
+function getFirebase() { return window._firebase; }
+
+function showAuthTab(tab) {
+  $("signin-form").classList.toggle("hidden", tab !== "signin");
+  $("signup-form").classList.toggle("hidden", tab !== "signup");
+  $("tab-signin").classList.toggle("active", tab === "signin");
+  $("tab-signup").classList.toggle("active", tab === "signup");
+  $("tab-signin").setAttribute("aria-selected", tab === "signin");
+  $("tab-signup").setAttribute("aria-selected", tab === "signup");
+}
+
+function authMsg(elId, text, type) {
+  const el = $(elId);
+  el.textContent = text;
+  el.className = `auth-msg ${type}`;
+  el.classList.toggle("hidden", !text);
+}
+
+async function doSignIn(e) {
+  e.preventDefault();
+  const email = $("si-email").value.trim();
+  const pass  = $("si-pass").value;
+  if (!validateEmail(email)) { authMsg("si-msg","Invalid email address","err-box"); return; }
+  if (pass.length < 6) { authMsg("si-msg","Password must be at least 6 characters","err-box"); return; }
+  const btn = $("si-btn"); btn.disabled = true; btn.textContent = "Signing in…";
+  try {
+    const fb = getFirebase();
+    await fb.signInWithEmailAndPassword(fb.auth, email, pass);
+  } catch(err) {
+    authMsg("si-msg", friendlyAuthError(err.code), "err-box");
+    btn.disabled = false; btn.textContent = "Sign in";
+  }
+}
+
+async function doSignUp(e) {
+  e.preventDefault();
+  const email = $("su-email").value.trim();
+  const pass  = $("su-pass").value;
+  const pass2 = $("su-pass2").value;
+  if (!validateEmail(email)) { authMsg("su-msg","Invalid email address","err-box"); return; }
+  if (pass.length < 6) { authMsg("su-msg","Password must be at least 6 characters","err-box"); return; }
+  if (pass !== pass2)  { authMsg("su-msg","Passwords don't match","err-box"); return; }
+  const btn = $("su-btn"); btn.disabled = true; btn.textContent = "Creating…";
+  try {
+    const fb = getFirebase();
+    await fb.createUserWithEmailAndPassword(fb.auth, email, pass);
+  } catch(err) {
+    authMsg("su-msg", friendlyAuthError(err.code), "err-box");
+    btn.disabled = false; btn.textContent = "Create account";
+  }
+}
+
+async function doSignOut() {
+  if (window._localMode) {
+    window._localMode = false;
+    // Reset state
+    state = { settings: { ...DEFAULT_SETTINGS }, subjects: [], classes: [], plan: {}, completions: {}, weeklyHours: {} };
+    if (_unsub) { _unsub(); _unsub = null; }
+    $("app-page").classList.add("hidden");
+    $("auth-page").classList.remove("hidden");
+    return;
+  }
+  if (_unsub) { _unsub(); _unsub = null; }
+  const fb = getFirebase();
+  await fb.signOut(fb.auth);
+}
+
+function validateEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+// ── Local / guest mode (no Firebase account needed) ───────────────────────
+function enterLocalMode() {
+  window._localMode = true;
+  window._currentUser = null;
+  $("loading-overlay").classList.add("hidden");
+  $("auth-page").classList.add("hidden");
+  $("app-page").classList.remove("hidden");
+  $("user-email-label").textContent = "Local mode · data saved on this device";
+  const ls = localStorage.getItem("ltp-state-local");
+  if (ls) { try { Object.assign(state, JSON.parse(ls)); } catch(_){} }
+  applySettingsToUI();
+  buildSubjectDropdown();
+  renderAll();
+  scheduleReminderIfEnabled();
+}
+
+
+function friendlyAuthError(code) {
+  const map = {
+    "auth/invalid-email":           "Invalid email address.",
+    "auth/user-not-found":          "No account found with that email.",
+    "auth/wrong-password":          "Incorrect password. Please try again.",
+    "auth/email-already-in-use":    "An account with this email already exists.",
+    "auth/weak-password":           "Password must be at least 6 characters.",
+    "auth/too-many-requests":       "Too many attempts. Please wait and try again.",
+    "auth/network-request-failed":  "Network error. Check your connection.",
+    "auth/invalid-credential":      "Incorrect email or password.",
+  };
+  return map[code] || `Error: ${code}`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  LOGIN / LOGOUT callbacks (called by onAuthStateChanged)
+// ══════════════════════════════════════════════════════════════════════════════
+window._onLogin = async function(user) {
+  $("loading-overlay").classList.add("hidden");
+  $("auth-page").classList.add("hidden");
+  $("app-page").classList.remove("hidden");
+  $("user-email-label").textContent = esc(user.email);
+
+  // Load from Firestore with localStorage fallback
+  await loadUserData(user.uid);
+  applySettingsToUI();
+  buildSubjectDropdown();
+  renderAll();
+  scheduleReminderIfEnabled();
+};
+
+window._onLogout = function() {
+  $("loading-overlay").classList.add("hidden");
+  $("app-page").classList.add("hidden");
+  $("auth-page").classList.remove("hidden");
+  // Reset forms
+  $("si-btn").disabled = false; $("si-btn").textContent = "Sign in";
+  $("su-btn").disabled = false; $("su-btn").textContent = "Create account";
+  $("si-email").value = ""; $("si-pass").value = "";
+  $("su-email").value = ""; $("su-pass").value = ""; $("su-pass2").value = "";
+  authMsg("si-msg","",""); authMsg("su-msg","","");
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  FIRESTORE DATA PERSISTENCE
+// ══════════════════════════════════════════════════════════════════════════════
+async function loadUserData(uid) {
+  try {
+    const fb = getFirebase();
+    const ref = fb.doc(fb.db, "users", uid);
+    const snap = await fb.getDoc(ref);
+    if (snap.exists()) {
+      const d = snap.data();
+      state.settings   = { ...DEFAULT_SETTINGS, ...(d.settings || {}) };
+      state.subjects   = d.subjects   || [];
+      state.classes    = d.classes    || [];
+      state.plan       = d.plan       || {};
+      state.completions= d.completions|| {};
+      state.weeklyHours= d.weeklyHours|| {};
+    } else {
+      // first login — load from localStorage if available
+      const ls = localStorage.getItem("ltp-state");
+      if (ls) { try { Object.assign(state, JSON.parse(ls)); } catch(_){} }
+    }
+    // Real-time listener for multi-device sync
+    if (_unsub) _unsub();
+    _unsub = fb.onSnapshot(ref, snap2 => {
+      if (!snap2.exists()) return;
+      const d = snap2.data();
+      state.settings   = { ...DEFAULT_SETTINGS, ...(d.settings || {}) };
+      state.subjects   = d.subjects   || [];
+      state.classes    = d.classes    || [];
+      state.plan       = d.plan       || {};
+      state.completions= d.completions|| {};
+      state.weeklyHours= d.weeklyHours|| {};
+      applySettingsToUI();
+      buildSubjectDropdown();
+      renderAll();
+    });
+  } catch(err) {
+    console.warn("Firestore load failed, using localStorage:", err);
+    const ls = localStorage.getItem("ltp-state");
+    if (ls) { try { Object.assign(state, JSON.parse(ls)); } catch(_){} }
+  }
+}
+
+async function saveUserData() {
+  // Local mode: use a separate key so it never touches Firebase
+  if (window._localMode) {
+    localStorage.setItem("ltp-state-local", JSON.stringify(state));
+    return;
+  }
+  // localStorage fallback always (for Firebase-authed users too)
+  localStorage.setItem("ltp-state", JSON.stringify(state));
+  if (!window._currentUser) return;
+  try {
+    const fb = getFirebase();
+    const ref = fb.doc(fb.db, "users", window._currentUser.uid);
+    await fb.setDoc(ref, {
+      settings:    state.settings,
+      subjects:    state.subjects,
+      classes:     state.classes,
+      plan:        state.plan,
+      completions: state.completions,
+      weeklyHours: state.weeklyHours,
+    }, { merge: true });
+  } catch(err) { console.warn("Firestore save failed:", err); }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  SETTINGS UI
+// ══════════════════════════════════════════════════════════════════════════════
+function applySettingsToUI() {
+  const s = state.settings;
+  $("wake").value       = s.wake       || "06:30";
+  $("bed").value        = s.bed        || "22:30";
+  $("travel-to").value  = s.travelTo   ?? 45;
+  $("travel-home").value= s.travelHome ?? 45;
+  $("dinner-dur").value = s.dinnerDur  ?? 30;
+  $("reminder-toggle").checked = !!s.reminder;
+  $("reminder-status").textContent = s.reminder ? "On" : "Off";
+}
+
+function readSettingsFromUI() {
+  return {
+    wake:       $("wake").value,
+    bed:        $("bed").value,
+    travelTo:   Math.max(0, parseInt($("travel-to").value)  || 0),
+    travelHome: Math.max(0, parseInt($("travel-home").value)|| 0),
+    dinnerDur:  Math.max(0, parseInt($("dinner-dur").value) || 0),
+    reminder:   $("reminder-toggle").checked,
+  };
+}
+
+function settingsChanged() {
+  state.settings = readSettingsFromUI();
+  regeneratePlan();
+  saveUserData();
+}
+
+function toggleReminder() {
+  state.settings.reminder = $("reminder-toggle").checked;
+  $("reminder-status").textContent = state.settings.reminder ? "On" : "Off";
+  scheduleReminderIfEnabled();
+  saveUserData();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  SUBJECTS
+// ══════════════════════════════════════════════════════════════════════════════
+function addSubject(e) {
+  e.preventDefault();
+  const name = $("subj-name").value.trim();
+  const str  = $("subj-str").value;
+  const goal = parseFloat($("subj-goal").value) || 3;
+  const exam = $("subj-exam").value || null;
+  if (!name) { showErr("subj-err","Subject name is required"); return; }
+  if (state.subjects.find(s => s.name.toLowerCase() === name.toLowerCase())) {
+    showErr("subj-err","A subject with this name already exists"); return;
+  }
+  hideErr("subj-err");
+  state.subjects.push({ id: uid(), name, strength: str, goal, examDate: exam });
+  $("subj-name").value = ""; $("subj-exam").value = "";
+  buildSubjectDropdown();
+  renderSubjects();
+  regeneratePlan();
+  saveUserData();
+}
+
+function removeSubject(id) {
+  state.subjects = state.subjects.filter(s => s.id !== id);
+  state.classes  = state.classes.filter(c => c.subjectId !== id);
+  buildSubjectDropdown();
+  renderSubjects();
+  renderClasses();
+  regeneratePlan();
+  saveUserData();
+}
+
+function renderSubjects() {
+  const el = $("subj-list");
+  if (!state.subjects.length) {
+    el.innerHTML = `<div class="empty"><div class="e-icon">📚</div><div class="e-title">No subjects yet</div><div>Add a subject above to get started.</div></div>`;
+    return;
+  }
+  el.innerHTML = state.subjects.map(s => {
+    const badgeCls = s.strength === "weak" ? "s-weak" : s.strength === "strong" ? "s-strong" : "s-avg";
+    const badgeTxt = { weak:"Weak 😰", average:"Average 😐", strong:"Strong 💪"}[s.strength];
+    const exam = s.examDate ? ` · Exam: ${s.examDate}` : "";
+    return `<div class="subj-item">
+      <div>
+        <div class="subj-name">${esc(s.name)}</div>
+        <div class="text-sm">${s.goal}h/week${esc(exam)}</div>
+      </div>
+      <span class="strength-badge ${badgeCls}">${badgeTxt}</span>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="removeSubject('${s.id}')" aria-label="Remove ${esc(s.name)}">✕</button>
+    </div>`;
+  }).join("");
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  CLASSES / TIMETABLE
+// ══════════════════════════════════════════════════════════════════════════════
+function buildSubjectDropdown() {
+  const sel = $("cl-subj");
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">— pick subject —</option>` +
+    state.subjects.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
+  if (cur) sel.value = cur;
+}
+
+function addClass(e) {
+  e.preventDefault();
+  const day  = $("cl-day").value;
+  const subId= $("cl-subj").value;
+  const start= $("cl-start").value;
+  const end  = $("cl-end").value;
+  if (!subId) { showErr("cl-err","Please select a subject"); return; }
+  if (!start || !end) { showErr("cl-err","Please set start and end times"); return; }
+  if (toMin(end) <= toMin(start)) { showErr("cl-err","End time must be after start time"); return; }
+  hideErr("cl-err");
+  state.classes.push({ id: uid(), day, subjectId: subId, start, end });
+  renderClasses();
+  regeneratePlan();
+  saveUserData();
+}
+
+function removeClass(id) {
+  state.classes = state.classes.filter(c => c.id !== id);
+  renderClasses();
+  regeneratePlan();
+  saveUserData();
+}
+
+function renderClasses() {
+  const el = $("class-list");
+  if (!state.classes.length) {
+    el.innerHTML = `<div class="empty"><div class="e-icon">📅</div><div class="e-title">No classes yet</div><div>Add your college timetable above.</div></div>`;
+    return;
+  }
+  const order = ["Mon","Tue","Wed","Thu","Fri","Sat"];
+  const sorted = [...state.classes].sort((a,b) =>
+    order.indexOf(a.day) - order.indexOf(b.day) || toMin(a.start) - toMin(b.start));
+  el.innerHTML = sorted.map(c => {
+    const sub = state.subjects.find(s => s.id === c.subjectId);
+    const name = sub ? sub.name : "Unknown";
+    return `<div class="class-item">
+      <span class="ci-day">${esc(c.day)}</span>
+      <span class="ci-sub">${esc(name)}</span>
+      <span class="ci-time">${esc(c.start)}–${esc(c.end)}</span>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="removeClass('${c.id}')" aria-label="Remove class">✕</button>
+    </div>`;
+  }).join("");
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  STUDY PLAN GENERATION
+// ══════════════════════════════════════════════════════════════════════════════
+const BLOCK_MIN  = 40;
+const BREAK_MIN  = 10;
+const REST_AFTER_HOME = 30;
+const REST_BEFORE_BED = 30;
+const DAYS_RANGE = 7; // generate plan for 7 days
+
+function getSubjectWeight(subj) {
+  const baseW = { weak: 3, average: 2, strong: 1 }[subj.strength] || 2;
+  if (!subj.examDate) return baseW;
+  const daysLeft = Math.ceil((new Date(subj.examDate) - new Date()) / 86400000);
+  if (daysLeft <= 0 || daysLeft > 14) return baseW;
+  // Closer exam → bigger boost (up to +3)
+  const boost = Math.round(3 * (1 - daysLeft / 14));
+  return baseW + boost;
+}
+
+function getTodayClassMinutes(dateStr) {
+  const d = new Date(dateStr);
+  const dName = dayName(d.getDay());
+  return state.classes
+    .filter(c => c.day === dName)
+    .reduce((sum, c) => sum + toMin(c.end) - toMin(c.start), 0);
+}
+
+function getStudyWindow(dateStr) {
+  const s = state.settings;
+  const wakeMin = toMin(s.wake);
+  const bedMin  = toMin(s.bed);
+  // Arrive home = wake + travelTo + classTime + travelHome (approx)
+  // We use a simpler approach: studyStart = arriveHome + rest
+  // arriveHome ≈ wake + travelTo + classMins + travelHome but we don't track last-class end
+  // So: studyStart = wake + travelTo + classMins + travelHome + 30 min rest
+  const classMins = getTodayClassMinutes(dateStr);
+  const arriveHome = wakeMin + (s.travelTo||0) + classMins + (s.travelHome||0);
+  const studyStart = arriveHome + REST_AFTER_HOME;
+  const studyEnd   = bedMin - REST_BEFORE_BED;
+  // Remove dinner window (dinner duration)
+  // We'll place dinner in the middle
+  const dinnerStart = studyStart + Math.floor((studyEnd - studyStart) / 2);
+  const dinnerEnd   = dinnerStart + (s.dinnerDur || 30);
+  if (studyEnd <= studyStart) return [];
+  // Two windows: before and after dinner
+  const windows = [];
+  if (dinnerStart > studyStart) windows.push([studyStart, dinnerStart]);
+  if (dinnerEnd < studyEnd)     windows.push([dinnerEnd, studyEnd]);
+  return windows;
+}
+
+function sliceIntoBlocks(windows) {
+  const blocks = [];
+  for (const [winStart, winEnd] of windows) {
+    let cursor = winStart;
+    while (cursor + BLOCK_MIN <= winEnd) {
+      blocks.push({ startMin: cursor, endMin: cursor + BLOCK_MIN });
+      cursor += BLOCK_MIN + BREAK_MIN;
+    }
+  }
+  return blocks;
+}
+
+function getWeeklyDeficit() {
+  // Returns { subjectId: deficitBlocks } based on how much was missed in last 7 days
+  const deficit = {};
+  const ws = getWeekStart();
+  for (const dateStr of Object.keys(state.plan)) {
+    if (dateStr < ws) continue;
+    for (const blk of (state.plan[dateStr] || [])) {
+      if (!blk.subjectId) continue;
+      if (!state.completions[blk.id]) {
+        deficit[blk.subjectId] = (deficit[blk.subjectId] || 0) + 1;
+      }
+    }
+  }
+  return deficit;
+}
+
+function assignSubjectsToBlocks(blocks, dateStr) {
+  if (!state.subjects.length || !blocks.length) return [];
+  const deficit = getWeeklyDeficit();
+  const weights = state.subjects.map(s => ({
+    id: s.id,
+    name: s.name,
+    w: getSubjectWeight(s) + (deficit[s.id] || 0) * 0.5
+  }));
+  const totalW = weights.reduce((s,x) => s+x.w, 0);
+  if (totalW === 0) return [];
+
+  // Distribute blocks proportionally
+  let allocated = weights.map(s => ({
+    id: s.id, name: s.name,
+    n: Math.round((s.w / totalW) * blocks.length)
+  }));
+  // Fix rounding
+  let diff = blocks.length - allocated.reduce((s,x)=>s+x.n,0);
+  allocated.sort((a,b) => b.n - a.n);
+  for (let i = 0; diff > 0; i = (i+1)%allocated.length, diff--) allocated[i].n++;
+  for (let i = 0; diff < 0; i = (i+1)%allocated.length, diff++) {
+    if (allocated[i].n > 0) allocated[i].n--;
+  }
+
+  // Build assignment array (avoid back-to-back same subject)
+  const pool = [];
+  for (const a of allocated) {
+    for (let i=0; i<a.n; i++) pool.push({ id: a.id, name: a.name });
+  }
+  // Shuffle with no-consecutive constraint
+  const arranged = shuffleNoConsec(pool);
+
+  return blocks.map((blk, i) => ({
+    id: `${dateStr}-${i}-${uid()}`,
+    subjectId: arranged[i]?.id || null,
+    subjectName: arranged[i]?.name || "Free",
+    startMin: blk.startMin,
+    endMin: blk.endMin,
+  }));
+}
+
+function shuffleNoConsec(arr) {
+  if (arr.length <= 1) return arr;
+  const out = [], pool = [...arr];
+  let last = null;
+  while (pool.length) {
+    // Find an item different from last
+    let idx = pool.findIndex(x => x.id !== (last && last.id));
+    if (idx === -1) idx = 0; // give up, just append
+    last = pool.splice(idx, 1)[0];
+    out.push(last);
+  }
+  return out;
+}
+
+function generatePlanForDate(dateStr) {
+  const windows = getStudyWindow(dateStr);
+  const blocks  = sliceIntoBlocks(windows);
+  return assignSubjectsToBlocks(blocks, dateStr);
+}
+
+function regeneratePlan() {
+  const newPlan = {};
+  for (let i=0; i<DAYS_RANGE; i++) {
+    const d = new Date(); d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().slice(0,10);
+    newPlan[dateStr] = generatePlanForDate(dateStr);
+  }
+  state.plan = newPlan;
+  renderAll();
+  saveUserData();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  RENDER ALL
+// ══════════════════════════════════════════════════════════════════════════════
+function renderAll() {
+  renderSubjects();
+  renderClasses();
+  renderDayBar();
+  renderPlan();
+  renderTodayGoal();
+  renderWeeklyGoals();
+  renderLeftoutBanner();
+}
+
+// ── Day Bar ────────────────────────────────────────────────────────────────
+function renderDayBar() {
+  const s      = state.settings;
+  const dateStr= today();
+  const wakeMin= toMin(s.wake);
+  const bedMin = toMin(s.bed);
+  const totalDay= 1440; // 24h
+  const dayLen = bedMin > wakeMin ? (bedMin - wakeMin) : (1440 - wakeMin + bedMin);
+
+  const classMins  = getTodayClassMinutes(dateStr);
+  const travelMins = (s.travelTo||0) + (s.travelHome||0);
+  const sleepMins  = 1440 - dayLen; // rest of day
+  const studyBlks  = (state.plan[dateStr] || []);
+  const studyMins  = studyBlks.length * BLOCK_MIN;
+  const freeMins   = Math.max(0, dayLen - classMins - travelMins - studyMins);
+
+  const segs = [
+    { cls: "seg-sleep",  pct: sleepMins/14.4,  label: "😴 Sleep" },
+    { cls: "seg-travel", pct: travelMins/14.4, label: "🚌 Travel" },
+    { cls: "seg-class",  pct: classMins/14.4,  label: "🏫 Classes" },
+    { cls: "seg-study",  pct: studyMins/14.4,  label: "📖 Study" },
+    { cls: "seg-free",   pct: freeMins/14.4,   label: "☕ Free" },
+  ].filter(s => s.pct > 0);
+
+  const bar = $("day-bar");
+  bar.innerHTML = segs.map(s => `
+    <div class="day-bar-seg ${s.cls}" style="width:${s.pct.toFixed(1)}%"
+         title="${s.label} (${Math.round(s.pct * 14.4)} min)">
+      ${s.pct > 8 ? s.label : ""}
+    </div>`).join("");
+}
+
+// ── Plan Tabs ──────────────────────────────────────────────────────────────
+let _activeDay = today();
+function renderPlan() {
+  const tabsEl = $("plan-day-tabs");
+  const contentEl = $("plan-content");
+  const dates = Object.keys(state.plan).sort();
+  if (!dates.length || !state.subjects.length) {
+    tabsEl.innerHTML = "";
+    contentEl.innerHTML = `<div class="empty"><div class="e-icon">✏️</div><div class="e-title">Your study plan will appear here</div><div>Add at least one subject and configure your daily settings.</div></div>`;
+    return;
+  }
+
+  if (!dates.includes(_activeDay)) _activeDay = dates[0];
+
+  tabsEl.innerHTML = dates.map(d => {
+    const dt = new Date(d + "T12:00:00");
+    const label = dt.toLocaleDateString("en-US", { weekday:"short", month:"short", day:"numeric" });
+    const isToday = d === today();
+    return `<button class="stab${d === _activeDay ? " active" : ""}"
+      onclick="setActivePlanDay('${d}')" aria-pressed="${d === _activeDay}">
+      ${esc(label)}${isToday ? " 📌" : ""}
+    </button>`;
+  }).join("");
+
+  renderPlanDay(_activeDay, contentEl);
+}
+
+function setActivePlanDay(d) {
+  _activeDay = d;
+  renderPlan();
+}
+
+function renderPlanDay(dateStr, contentEl) {
+  const blocks = state.plan[dateStr] || [];
+  if (!blocks.length) {
+    contentEl.innerHTML = `<div class="empty"><div class="e-icon">🎉</div><div class="e-title">No study blocks today</div><div>Enjoy your free time — or add more subjects to get blocks.</div></div>`;
+    return;
+  }
+
+  const s = state.settings;
+  const classMins = getTodayClassMinutes(dateStr);
+  const dinnerStart = toMin(s.wake) + (s.travelTo||0) + classMins + (s.travelHome||0) + REST_AFTER_HOME +
+    Math.floor((toMin(s.bed) - REST_BEFORE_BED - (toMin(s.wake) + (s.travelTo||0) + classMins + (s.travelHome||0) + REST_AFTER_HOME)) / 2);
+  const dinnerEnd = dinnerStart + (s.dinnerDur||30);
+
+  let html = `<div class="block-list">`;
+  let prevEnd = -1;
+  for (let i=0; i<blocks.length; i++) {
+    const blk = blocks[i];
+    const done = !!state.completions[blk.id];
+    // Show break between blocks
+    if (i > 0) {
+      html += `<div class="break-block" aria-label="10-minute break">☕ 10 min break</div>`;
+    }
+    // Show dinner if it falls between prev block and this one
+    if (prevEnd > 0 && blk.startMin >= dinnerStart && prevEnd <= dinnerStart) {
+      html += `<div class="break-block" aria-label="Dinner break">🍽️ Dinner break (~${s.dinnerDur||30} min)</div>`;
+    }
+    prevEnd = blk.endMin;
+    html += `<div class="study-block${done ? " done" : ""}" id="blk-${blk.id}">
+      <input type="checkbox" class="sb-check" id="chk-${blk.id}"
+        ${done ? "checked" : ""} onchange="toggleBlock('${dateStr}','${blk.id}',this.checked)"
+        aria-label="Mark ${esc(blk.subjectName)} as done">
+      <div class="sb-info">
+        <div class="sb-title">${esc(blk.subjectName)}</div>
+        <div class="sb-time">${fromMin(blk.startMin)} – ${fromMin(blk.endMin)} (40 min)</div>
+      </div>
+    </div>`;
+  }
+  html += `</div>`;
+  contentEl.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  BLOCK COMPLETION
+// ══════════════════════════════════════════════════════════════════════════════
+function toggleBlock(dateStr, blockId, checked) {
+  if (checked) {
+    state.completions[blockId] = true;
+  } else {
+    delete state.completions[blockId];
+  }
+  updateWeeklyHours(dateStr, blockId, checked);
+  // Update DOM without full re-render
+  const blkEl = document.getElementById(`blk-${blockId}`);
+  if (blkEl) blkEl.classList.toggle("done", checked);
+  renderTodayGoal();
+  renderWeeklyGoals();
+  renderLeftoutBanner();
+  saveUserData();
+}
+
+function updateWeeklyHours(dateStr, blockId, done) {
+  // Find the block to get subjectId
+  const blocks = state.plan[dateStr] || [];
+  const blk = blocks.find(b => b.id === blockId);
+  if (!blk || !blk.subjectId) return;
+  const ws = getWeekStart();
+  if (dateStr < ws) return; // older than this week
+  if (!state.weeklyHours[blk.subjectId]) state.weeklyHours[blk.subjectId] = 0;
+  state.weeklyHours[blk.subjectId] += done ? BLOCK_MIN : -BLOCK_MIN;
+  state.weeklyHours[blk.subjectId] = Math.max(0, state.weeklyHours[blk.subjectId]);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  TODAY'S GOAL
+// ══════════════════════════════════════════════════════════════════════════════
+function renderTodayGoal() {
+  const dateStr = today();
+  const blocks  = state.plan[dateStr] || [];
+  const el = $("today-goal-content");
+  if (!blocks.length) {
+    el.innerHTML = `<div class="empty"><div class="e-icon">📋</div><div class="e-title">No blocks planned for today</div><div>Generate a plan to see your daily goal.</div></div>`;
+    return;
+  }
+  const done  = blocks.filter(b => state.completions[b.id]).length;
+  const total = blocks.length;
+  const doneMins = done * BLOCK_MIN;
+  const totalMins= total * BLOCK_MIN;
+  const pct = total ? (done/total*100) : 0;
+  el.innerHTML = `
+    <div class="prog-wrap">
+      <div class="prog-label">
+        <span>${done}/${total} blocks · ${doneMins} / ${totalMins} min</span>
+        <span class="bold">${Math.round(pct)}%</span>
+      </div>
+      <div class="prog-track" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="Today's study progress">
+        <div class="prog-fill ${pct>=100?"ok":pct>=50?"":"warn"}" style="width:${pct}%"></div>
+      </div>
+    </div>
+    <p class="text-sm" style="margin-top:.4rem">${pct>=100 ? "🎉 You've crushed today's goal!" : pct>0 ? `Keep going! ${total-done} block${total-done>1?"s":""} left.` : "Start your first block when you're ready!"}</p>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  WEEKLY GOALS
+// ══════════════════════════════════════════════════════════════════════════════
+function renderWeeklyGoals() {
+  const el = $("weekly-goals-content");
+  if (!state.subjects.length) {
+    el.innerHTML = `<div class="empty"><div class="e-icon">📈</div><div class="e-title">Add subjects to track progress</div></div>`;
+    return;
+  }
+  // Count done minutes from completions in this week
+  const ws = getWeekStart();
+  const doneMins = {};
+  for (const dateStr of Object.keys(state.plan)) {
+    if (dateStr < ws) continue;
+    for (const blk of (state.plan[dateStr] || [])) {
+      if (blk.subjectId && state.completions[blk.id]) {
+        doneMins[blk.subjectId] = (doneMins[blk.subjectId]||0) + BLOCK_MIN;
+      }
+    }
+  }
+
+  el.innerHTML = state.subjects.map(s => {
+    const goalMins = s.goal * 60;
+    const done2 = doneMins[s.id] || 0;
+    const pct = goalMins ? Math.min(100, done2/goalMins*100) : 0;
+    const doneH = (done2/60).toFixed(1);
+    const goalH = s.goal;
+    return `<div class="prog-wrap" style="margin-bottom:.7rem">
+      <div class="prog-label">
+        <span>${esc(s.name)}</span>
+        <span>${doneH}h / ${goalH}h</span>
+      </div>
+      <div class="prog-track" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(s.name)} weekly progress">
+        <div class="prog-fill ${pct>=100?"ok":""}" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  LEFT OUT BANNER
+// ══════════════════════════════════════════════════════════════════════════════
+function renderLeftoutBanner() {
+  const el = $("leftout-banner");
+  const ws = getWeekStart();
+  const missed = {};
+  for (const dateStr of Object.keys(state.plan)) {
+    if (dateStr < ws || dateStr > today()) continue;
+    for (const blk of (state.plan[dateStr] || [])) {
+      if (blk.subjectId && !state.completions[blk.id]) {
+        missed[blk.subjectId] = (missed[blk.subjectId]||0) + BLOCK_MIN;
+      }
+    }
+  }
+  const entries = Object.entries(missed).filter(([,m]) => m > 0);
+  if (!entries.length) { el.innerHTML = ""; return; }
+  const items = entries.map(([id, mins]) => {
+    const sub = state.subjects.find(s => s.id === id);
+    if (!sub) return null;
+    return `${esc(sub.name)}: ${mins} min missed`;
+  }).filter(Boolean);
+
+  el.innerHTML = `<div class="banner leftout" role="alert">
+    <span class="banner-icon">⚠️</span>
+    <div>
+      <strong>Study sessions missed this week:</strong><br>
+      ${items.join(" · ")}
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  BROWSER REMINDER
+// ══════════════════════════════════════════════════════════════════════════════
+function scheduleReminderIfEnabled() {
+  if (_reminderTimer) { clearTimeout(_reminderTimer); _reminderTimer = null; }
+  if (!state.settings.reminder) return;
+  if (!("Notification" in window)) return;
+  const now = new Date();
+  const reminderHour = 19; // 7 PM
+  const target = new Date(now);
+  target.setHours(reminderHour, 0, 0, 0);
+  if (target <= now) target.setDate(target.getDate() + 1);
+  const delay = target - now;
+  _reminderTimer = setTimeout(async () => {
+    // Check if blocks remain
+    const dateStr = today();
+    const blocks = state.plan[dateStr] || [];
+    const remaining = blocks.filter(b => !state.completions[b.id]).length;
+    if (remaining > 0) {
+      let perm = Notification.permission;
+      if (perm === "default") perm = await Notification.requestPermission();
+      if (perm === "granted") {
+        new Notification("⏳ Leftover Time Planner", {
+          body: `You still have ${remaining} study block${remaining>1?"s":""} to go today. Keep it up!`,
+          icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏳</text></svg>"
+        });
+      }
+    }
+    scheduleReminderIfEnabled(); // reschedule for next day
+  }, delay);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════════════════════════
+function showErr(id, msg) {
+  const el = $(id); el.textContent = msg; el.classList.remove("hidden");
+}
+function hideErr(id) { const el = $(id); el.classList.add("hidden"); }
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  INIT (Firebase not ready yet — wait for auth state)
+//  The loading overlay hides when _onLogin or _onLogout fires.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Fallback: if Firebase module fails to load, show auth page after 4s
+setTimeout(() => {
+  if (!window._firebase) {
+    console.warn("Firebase not loaded — using localStorage-only mode");
+    // Show app in offline/local mode using localStorage
+    $("loading-overlay").classList.add("hidden");
+    $("auth-page").classList.add("hidden");
+    $("app-page").classList.remove("hidden");
+    $("user-email-label").textContent = "Local mode";
+    const ls = localStorage.getItem("ltp-state");
+    if (ls) { try { Object.assign(state, JSON.parse(ls)); } catch(_){} }
+    applySettingsToUI();
+    buildSubjectDropdown();
+    renderAll();
+    scheduleReminderIfEnabled();
+
+    // Patch sign-out for local mode
+    window.doSignOut = () => {
+      localStorage.removeItem("ltp-state");
+      location.reload();
+    };
+  }
+}, 4000);
+</script>
+</body>
+</html>

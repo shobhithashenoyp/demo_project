@@ -1,0 +1,3002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leftover Time Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Tokens ───────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #3f6cb0; --surface: #ffffff; --surface2: #eef1f6;
+    --border: #d8dde8; --text: #1a1f36; --text2: #5a607a;
+    --accent: #4f6ef7; --accent-h: #3b57e0; --danger: #e53e3e;
+    --warn: #d97706; --ok: #22c55e; --sleep: #818cf8; --travel: #f97316;
+    --class: #06b6d4; --study: #22c55e; --free: #e2e8f0;
+    --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,.08);
+    --transition: .2s ease;
+  }
+  [data-theme="dark"] {                                                   
+    --bg: #0f1117; --surface: #1a1d2e; --surface2: #242740;                    
+    --border: #2e3250; --text: #e8ecf5; --text2: #8891b2;
+    --accent: #6678ff; --accent-h: #7a8bff; --danger: #f87171;
+    --warn: #fbbf24; --ok: #4ade80; --sleep: #a5b4fc; --travel: #fb923c;
+    --class: #22d3ee; --study: #4ade80; --free: #2a2d45;
+    --shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+  html { font-size: 15px; scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.55;
+    min-height: 100vh; transition: background var(--transition), color var(--transition);
+  }
+
+  /* ── Layout ───────────────────────────────────────────────────────── */
+  .app-shell { display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: .6rem 1.2rem; display: flex; align-items: center; gap: .8rem;
+    position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow);
+  }
+  .topbar h1 { font-size: 1.1rem; font-weight: 700; color: var(--accent); flex: 1; }
+  .topbar .user-label { font-size: .8rem; color: var(--text2); max-width: 180px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .content { flex: 1; padding: 1rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+  .two-col { display: grid; grid-template-columns: 380px 1fr; gap: 1rem; align-items: start; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── Cards / Sections ─────────────────────────────────────────────── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+  }
+  .card h2 { font-size: .95rem; font-weight: 700; margin-bottom: .8rem;
+    color: var(--text); display: flex; align-items: center; gap: .4rem; }
+  .card h3 { font-size: .85rem; font-weight: 600; margin: .6rem 0 .4rem; color: var(--text2); }
+
+  /* ── Day Bar ──────────────────────────────────────────────────────── */
+  .day-bar-wrap { background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: .8rem 1rem; margin-bottom: 1rem;
+    box-shadow: var(--shadow); }
+  .day-bar-label { font-size: .78rem; font-weight: 700; margin-bottom: .4rem;
+    color: var(--text2); letter-spacing: .05em; text-transform: uppercase; }
+  .day-bar { display: flex; border-radius: 6px; overflow: hidden; height: 28px; }
+  .day-bar-seg { height: 100%; display: flex; align-items: center;
+    justify-content: center; font-size: .67rem; font-weight: 700;
+    color: #fff; overflow: hidden; white-space: nowrap; transition: width var(--transition); }
+  .seg-sleep { background: var(--sleep); }
+  .seg-travel { background: var(--travel); }
+  .seg-class  { background: var(--class); }
+  .seg-study  { background: var(--study); }
+  .seg-free   { background: var(--free); color: var(--text2); }
+  .day-bar-legend { display: flex; flex-wrap: wrap; gap: .4rem .8rem; margin-top: .5rem; }
+  .leg-item { display: flex; align-items: center; gap: .3rem; font-size: .75rem; color: var(--text2); }
+  .leg-dot  { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── Forms ────────────────────────────────────────────────────────── */
+  .form-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .6rem; }
+  label { font-size: .82rem; font-weight: 600; color: var(--text2);
+    display: flex; flex-direction: column; gap: .2rem; }
+  label span.req { color: var(--danger); }
+  input[type="text"], input[type="email"], input[type="password"],
+  input[type="time"], input[type="number"], input[type="date"],
+  select, textarea {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: .85rem;
+    padding: .4rem .6rem; outline: none; width: 100%;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,110,247,.18);
+  }
+  input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+  .err { font-size: .78rem; color: var(--danger); margin-top: .25rem; display: block; }
+  .hint { font-size: .78rem; color: var(--text2); margin-top: .25rem; }
+
+  /* ── Buttons ──────────────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; gap: .35rem;
+    border: none; border-radius: 7px; cursor: pointer;
+    font-size: .85rem; font-weight: 600; padding: .45rem .9rem;
+    transition: background var(--transition), transform var(--transition);
+  }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-h); }
+  .btn-ghost  { background: var(--surface2); color: var(--text); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+  .btn-danger:hover { background: var(--danger); color: #fff; }
+  .btn-sm { padding: .28rem .6rem; font-size: .78rem; }
+  .btn-icon { padding: .3rem .4rem; border-radius: 5px; }
+  .icon { font-size: 1rem; line-height: 1; }
+
+  /* ── Auth Page (neon split login) ─────────────────────────────────── */
+  #auth-page {
+    --neon: #2de2e6; --teal: #2fb8c8;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1.4rem; min-height: 100vh; padding: 1.5rem; background: #050816; color: #fff;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  .auth-box {
+    position: relative; width: min(900px, 100%); height: 540px;
+    background: #070b1c; overflow: hidden;
+    border: 2px solid var(--neon); border-radius: 2px;
+    box-shadow: 0 0 10px var(--neon), 0 0 32px rgba(45,226,230,.55),
+                0 0 80px rgba(45,226,230,.25), inset 0 0 22px rgba(45,226,230,.22);
+  }
+
+  /* Diagonal teal panel */
+  .auth-panel {
+    position: absolute; inset: 0; pointer-events: none;
+    clip-path: polygon(45% 0, 100% 0, 100% 100%, 100% 100%);
+    transition: clip-path .7s cubic-bezier(.65,0,.35,1);
+  }
+  .auth-panel::before, .auth-panel::after {
+    content: ""; position: absolute; inset: 0; transition: opacity .5s ease;
+  }
+  .auth-panel::before { background: linear-gradient(to bottom left, #38c9c9 0%, #1f8696 42%, rgba(7,11,28,0) 88%); opacity: 1; }
+  .auth-panel::after  { background: linear-gradient(to bottom right, #2fb8c8 0%, #1b6678 55%, #0a2535 100%); opacity: 0; }
+  .auth-box[data-mode="signup"] .auth-panel { clip-path: polygon(0 0, 62% 0, 33% 100%, 0 100%); }
+  .auth-box[data-mode="signup"] .auth-panel::before { opacity: 0; }
+  .auth-box[data-mode="signup"] .auth-panel::after  { opacity: 1; }
+
+  /* Swappable layers (forms + welcome text): fade out, then the new one fades in */
+  .auth-swap {
+    --dx: 0px; opacity: 0; visibility: hidden;
+    transition: opacity .25s ease, transform .25s ease, visibility 0s .25s;
+  }
+  .auth-swap.a-in { --dx: -24px; }
+  .auth-swap.a-up { --dx: 24px; }
+  .auth-box[data-mode="signin"] .auth-swap.a-in,
+  .auth-box[data-mode="signup"] .auth-swap.a-up {
+    --dx: 0px; opacity: 1; visibility: visible;
+    transition: opacity .35s ease .4s, transform .35s ease .4s, visibility 0s 0s;
+  }
+
+  .auth-welcome {
+    position: absolute; top: 50%; z-index: 2; transform: translate(var(--dx), -50%);
+    font-size: 2rem; font-weight: 800; line-height: 1.15; letter-spacing: .5px;
+    text-transform: uppercase; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.25);
+  }
+  .auth-welcome.a-in { right: 44px; text-align: right; }
+  .auth-welcome.a-up { left: 44px;  text-align: left; }
+
+  .auth-side {
+    position: absolute; top: 0; bottom: 0; z-index: 2; padding: 0 2rem;
+    display: flex; align-items: center; justify-content: center;
+    transform: translateX(var(--dx));
+  }
+  .auth-side.a-in { left: 0;  width: 55%; }
+  .auth-side.a-up { right: 0; width: 42%; }
+  .auth-form { width: 100%; max-width: 300px; }
+  .auth-title { text-align: center; font-size: 2rem; font-weight: 700; line-height: 1.2; color: #fff; margin-bottom: .6rem; }
+
+  /* Underline-only fields with floating labels */
+  #auth-page .a-field { position: relative; height: 50px; margin-top: 1.3rem;
+    border-bottom: 2px solid #d9dee8; transition: border-color .25s ease; }
+  #auth-page .a-field:focus-within { border-bottom-color: var(--teal); }
+  #auth-page .a-field input {
+    width: 100%; height: 100%; padding: 14px 2rem 0 0; background: transparent;
+    border: none; border-radius: 0; box-shadow: none; outline: none;
+    color: #fff; font: 500 1rem 'Poppins', sans-serif;
+  }
+  #auth-page .a-field input:focus { border: none; box-shadow: none; }
+  #auth-page .a-field input:-webkit-autofill {
+    -webkit-text-fill-color: #fff; transition: background-color 9999s ease-out 0s;
+    -webkit-box-shadow: 0 0 0 40px #070b1c inset;
+  }
+  #auth-page .a-field label {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: block;
+    font-size: 1rem; font-weight: 500; color: #fff; pointer-events: none;
+    transition: top .25s ease, transform .25s ease, font-size .25s ease, color .25s ease;
+  }
+  #auth-page .a-field input:focus + label,
+  #auth-page .a-field input:not(:placeholder-shown) + label {
+    top: 0; transform: translateY(-2px); font-size: .82rem; font-weight: 600; color: var(--teal);
+  }
+  #auth-page .a-icon {
+    position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+    width: 18px; height: 18px; color: #fff; transition: color .25s ease;
+    background: none; border: none; padding: 0; display: block;
+  }
+  #auth-page .a-icon svg { width: 100%; height: 100%; display: block; }
+  #auth-page .a-eye { cursor: pointer; }
+  #auth-page .a-eye:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+  #auth-page .a-field:focus-within .a-icon { color: var(--teal); }
+
+  /* Pill button */
+  #auth-page .a-btn {
+    width: 100%; height: 46px; margin-top: 1.6rem; border-radius: 999px; cursor: pointer;
+    border: 1.5px solid rgba(180,245,250,.85);
+    background: linear-gradient(to bottom, #38c9d3 0%, #12606e 100%);
+    color: #fff; font: 600 .95rem 'Poppins', sans-serif;
+    transition: box-shadow .25s ease, filter .25s ease, transform .15s ease;
+  }
+  #auth-page .a-btn:hover:not(:disabled) { box-shadow: 0 0 18px rgba(45,226,230,.75); filter: brightness(1.12); }
+  #auth-page .a-btn:active:not(:disabled) { transform: scale(.98); }
+  #auth-page .a-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  #auth-page .a-btn:disabled { opacity: .7; cursor: wait; }
+
+  .a-switch { margin-top: 1.1rem; text-align: center; font-size: .8rem; line-height: 1.6; color: #fff; }
+  .a-switch button { display: block; margin: 0 auto; background: none; border: none; cursor: pointer;
+    color: var(--teal); font: 700 .85rem 'Poppins', sans-serif; }
+  .a-switch button:hover { color: var(--neon); text-decoration: underline; }
+  .a-switch button:focus-visible, .a-local:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+
+  .a-local { background: none; border: none; cursor: pointer; color: #8fb8c4;
+    font: 500 .8rem 'Poppins', sans-serif; transition: color .2s ease; }
+  .a-local:hover { color: var(--neon); }
+  .a-local small { opacity: .7; font-size: .72rem; }
+
+  .auth-msg { text-align: center; padding: .4rem .5rem; border-radius: 6px; font-size: .78rem; margin-top: .8rem; }
+  .auth-msg.ok  { background: rgba(34,197,94,.14); color: #6ee79a; }
+  .auth-msg.err-box { background: rgba(248,113,113,.12); color: #ff9a9a; }
+
+  @media (max-width: 720px) {
+    #auth-page { padding: .75rem; }
+    .auth-box { height: 640px; }
+    #auth-page .auth-box .auth-panel { inset: 0 0 auto 0; height: 170px;
+      clip-path: polygon(0 0, 100% 0, 100% 55%, 0 100%); }
+    #auth-page .auth-box .auth-panel::before { background: linear-gradient(to bottom left, #38c9c9 0%, #1f8696 60%, #12404f 100%); }
+    .auth-welcome { top: 66px; font-size: 1.6rem; }
+    .auth-welcome.a-in, .auth-welcome.a-up { left: 0; right: 0; text-align: center; }
+    .auth-side.a-in, .auth-side.a-up { left: 0; right: 0; width: 100%; top: 175px; bottom: 0;
+      align-items: flex-start; padding: 0 1.5rem; }
+    .auth-title { font-size: 1.7rem; }
+  }
+
+  /* ── Tabs inside app ─────────────────────────────────────────────── */
+  .section-tabs { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .8rem; }
+  .stab { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px;
+    color: var(--text2); font-size: .82rem; font-weight: 600; padding: .3rem .7rem;
+    cursor: pointer; transition: background var(--transition), color var(--transition); }
+  .stab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .stab-panel { display: none; }
+  .stab-panel.active { display: block; }
+
+  /* ── Timetable list ───────────────────────────────────────────────── */
+  .class-list { display: flex; flex-direction: column; gap: .4rem; margin-bottom: .6rem; }
+  .class-item {
+    display: flex; align-items: center; gap: .4rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 7px; padding: .4rem .6rem; font-size: .82rem;
+  }
+  .class-item .ci-day { background: var(--accent); color: #fff; border-radius: 4px;
+    padding: .1rem .35rem; font-size: .72rem; font-weight: 700; flex-shrink: 0; }
+  .class-item .ci-sub { font-weight: 600; flex: 1; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; }
+  .class-item .ci-time { color: var(--text2); font-size: .78rem; flex-shrink: 0; }
+
+  /* ── Subject list ─────────────────────────────────────────────────── */
+  .subj-list { display: flex; flex-direction: column; gap: .4rem; margin-bottom: .6rem; }
+  .subj-item {
+    display: grid; grid-template-columns: 1fr auto auto; align-items: center;
+    gap: .5rem; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 7px; padding: .45rem .6rem; font-size: .82rem;
+  }
+  .subj-name { font-weight: 600; }
+  .strength-badge {
+    font-size: .7rem; font-weight: 700; border-radius: 4px; padding: .1rem .3rem;
+  }
+  .s-weak   { background: rgba(229,62,62,.15); color: var(--danger); }
+  .s-avg    { background: rgba(217,119,6,.15); color: var(--warn); }
+  .s-strong { background: rgba(34,197,94,.15); color: var(--ok); }
+
+  /* ── Study Plan ───────────────────────────────────────────────────── */
+  .plan-day-label {
+    font-size: .78rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text2); margin: .6rem 0 .4rem;
+  }
+  .block-list { display: flex; flex-direction: column; gap: .35rem; }
+  .study-block {
+    display: flex; align-items: center; gap: .6rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: .5rem .7rem; transition: background var(--transition);
+  }
+  .study-block.done {
+    background: rgba(34,197,94,.08); border-color: rgba(34,197,94,.3);
+  }
+  .study-block.done .sb-title { text-decoration: line-through; color: var(--text2); }
+  .sb-check { flex-shrink: 0; }
+  .sb-info { flex: 1; min-width: 0; }
+  .sb-title { font-weight: 600; font-size: .85rem; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; }
+  .sb-time { font-size: .76rem; color: var(--text2); }
+  .break-block {
+    text-align: center; font-size: .75rem; color: var(--text2);
+    padding: .15rem 0; border-top: 1px dashed var(--border);
+    border-bottom: 1px dashed var(--border); margin: .1rem 0;
+  }
+
+  /* ── Progress bars ────────────────────────────────────────────────── */
+  .prog-wrap { margin: .3rem 0; }
+  .prog-label { display: flex; justify-content: space-between; font-size: .78rem;
+    color: var(--text2); margin-bottom: .2rem; }
+  .prog-track { background: var(--surface2); border-radius: 100px; height: 8px;
+    overflow: hidden; border: 1px solid var(--border); }
+  .prog-fill { height: 100%; background: var(--accent); border-radius: 100px;
+    transition: width .4s ease; min-width: 0; }
+  .prog-fill.ok { background: var(--ok); }
+  .prog-fill.warn { background: var(--warn); }
+
+  /* ── Banner ───────────────────────────────────────────────────────── */
+  .banner {
+    display: flex; align-items: flex-start; gap: .6rem;
+    border-radius: 8px; padding: .6rem .8rem; font-size: .83rem; margin-bottom: .6rem;
+  }
+  .banner.leftout { background: rgba(229,62,62,.08); border: 1px solid rgba(229,62,62,.2); color: var(--danger); }
+  .banner.info { background: rgba(79,110,247,.08); border: 1px solid rgba(79,110,247,.2); color: var(--accent); }
+  .banner-icon { font-size: 1rem; flex-shrink: 0; margin-top: .05rem; }
+
+  /* ── Empty state ──────────────────────────────────────────────────── */
+  .empty {
+    text-align: center; padding: 1.5rem 1rem;
+    color: var(--text2); font-size: .85rem;
+  }
+  .empty .e-icon { font-size: 2rem; margin-bottom: .4rem; }
+  .empty .e-title { font-weight: 700; color: var(--text); font-size: .9rem; }
+
+  /* ── Misc ─────────────────────────────────────────────────────────── */
+  hr { border: none; border-top: 1px solid var(--border); margin: .8rem 0; }
+  .row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .spacer { flex: 1; }
+  .text-sm { font-size: .8rem; color: var(--text2); }
+  .bold { font-weight: 700; }
+  .hidden { display: none !important; }
+
+  /* ── Spinner ──────────────────────────────────────────────────────── */
+  .spinner {
+    width: 20px; height: 20px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin .7s linear infinite; display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Reminder toggle ─────────────────────────────────────────────── */
+  .toggle-row { display: flex; align-items: center; gap: .5rem; font-size: .83rem; }
+  .toggle {
+    position: relative; width: 36px; height: 20px;
+    border-radius: 100px; background: var(--border);
+    cursor: pointer; transition: background var(--transition); flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-knob {
+    position: absolute; left: 2px; top: 2px; width: 16px; height: 16px;
+    border-radius: 50%; background: #fff;
+    transition: transform var(--transition), box-shadow var(--transition);
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .toggle input:checked ~ .toggle-knob { transform: translateX(16px); }
+  .toggle:has(input:checked) { background: var(--accent); }
+
+  /* ── Profile Modal ────────────────────────────────────────────────── */
+  #profile-modal {
+    position: fixed; inset: 0; z-index: 10001; background: rgba(0,0,0,.55);
+    display: flex; align-items: center; justify-content: center; padding: 1rem;
+    backdrop-filter: blur(4px);
+  }
+  #profile-modal .prof-box {
+    background: #070b1c; color: #fff; border: 1.5px solid rgba(45,226,230,.5);
+    border-radius: 16px; width: 100%; max-width: 420px;
+    box-shadow: 0 0 24px rgba(45,226,230,.35), 0 8px 40px rgba(0,0,0,.5);
+    font-family: 'Poppins', sans-serif; overflow: hidden;
+  }
+  .prof-header {
+    background: linear-gradient(135deg, #0c2a3a 0%, #0f4a5a 50%, #072030 100%);
+    padding: 2rem 1.5rem 1.2rem; text-align: center; position: relative;
+    border-bottom: 1px solid rgba(45,226,230,.25);
+  }
+  .prof-header::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 0%, rgba(45,226,230,.22) 0%, transparent 70%);
+  }
+  .prof-avatar {
+    width: 80px; height: 80px; border-radius: 50%; margin: 0 auto .8rem;
+    background: linear-gradient(135deg, #38c9d3, #12606e);
+    border: 3px solid rgba(45,226,230,.7);
+    box-shadow: 0 0 20px rgba(45,226,230,.5), 0 0 40px rgba(45,226,230,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.4rem; position: relative; z-index: 1; cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .prof-avatar:hover { transform: scale(1.06); box-shadow: 0 0 28px rgba(45,226,230,.8), 0 0 50px rgba(45,226,230,.3); }
+  .prof-avatar input[type="file"] { display: none; }
+  .prof-avatar-hint { font-size: .68rem; color: rgba(45,226,230,.6); margin-top: -.3rem; margin-bottom: .4rem; position: relative; z-index: 1; }
+  .prof-name {
+    font-size: 1.25rem; font-weight: 800; color: #fff; position: relative; z-index: 1;
+    text-shadow: 0 0 14px rgba(45,226,230,.6); letter-spacing: .3px;
+  }
+  .prof-email { font-size: .8rem; color: #9fb9c6; margin-top: .15rem; position: relative; z-index: 1; }
+  .prof-badge {
+    display: inline-flex; align-items: center; gap: .3rem; margin-top: .6rem;
+    padding: .2rem .7rem; border-radius: 999px; font-size: .72rem; font-weight: 700;
+    background: rgba(45,226,230,.14); border: 1px solid rgba(45,226,230,.4); color: #2de2e6;
+    position: relative; z-index: 1;
+  }
+  .prof-body { padding: 1.2rem 1.5rem; }
+  .prof-section { margin-bottom: 1.1rem; }
+  .prof-section-title {
+    font-size: .68rem; font-weight: 700; color: #2fb8c8; text-transform: uppercase;
+    letter-spacing: .08em; margin-bottom: .6rem; display: flex; align-items: center; gap: .4rem;
+  }
+  .prof-section-title::after { content: ""; flex: 1; height: 1px; background: rgba(45,226,230,.2); }
+  .prof-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+  .prof-stat {
+    background: #0c1330; border: 1px solid rgba(45,226,230,.2); border-radius: 8px;
+    padding: .6rem .8rem; text-align: center; transition: border-color .2s ease;
+  }
+  .prof-stat:hover { border-color: rgba(45,226,230,.5); }
+  .prof-stat .ps-val { font-size: 1.4rem; font-weight: 800; color: #2de2e6; line-height: 1.1;
+    text-shadow: 0 0 10px rgba(45,226,230,.5); }
+  .prof-stat .ps-lbl { font-size: .68rem; color: #9fb9c6; margin-top: .15rem; }
+  .prof-info-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid rgba(45,226,230,.1); font-size: .82rem; }
+  .prof-info-row:last-child { border-bottom: none; }
+  .prof-info-row .pir-key { color: #9fb9c6; display: flex; align-items: center; gap: .4rem; }
+  .prof-info-row .pir-val { color: #fff; font-weight: 600; text-align: right; word-break: break-all; }
+  .prof-edit-field { background: transparent; color: #fff; border: none; border-bottom: 2px solid rgba(45,226,230,.4); font: 600 .82rem 'Poppins',sans-serif; padding: .2rem .1rem; outline: none; text-align: right; min-width: 80px; max-width: 150px; }
+  .prof-edit-field:focus { border-bottom-color: #2de2e6; }
+  .prof-footer { padding: .8rem 1.5rem 1.2rem; display: flex; gap: .5rem; justify-content: flex-end; border-top: 1px solid rgba(45,226,230,.15); flex-wrap: wrap; }
+  /* Profile avatar button in topbar */
+  .prof-btn {
+    width: 34px; height: 34px; border-radius: 50%; border: 2px solid rgba(45,226,230,.5);
+    background: linear-gradient(135deg, #38c9d3, #12606e);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    font-size: 1.1rem; box-shadow: 0 0 10px rgba(45,226,230,.3);
+    transition: box-shadow .2s ease, transform .2s ease; flex-shrink: 0;
+    position: relative; overflow: hidden;
+  }
+  .prof-btn:hover { box-shadow: 0 0 18px rgba(45,226,230,.7); transform: scale(1.08); }
+  .prof-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .prof-btn img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; position: absolute; inset: 0; }
+  .prof-streak { display: flex; align-items: center; gap: .4rem; justify-content: center; padding: .5rem; background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.25); border-radius: 8px; margin-bottom: .8rem; }
+  .prof-streak .ps-fire { font-size: 1.3rem; }
+  .prof-streak .ps-txt { font-size: .8rem; color: #fbbf24; font-weight: 600; }
+  .prof-btn-danger-sm { background: transparent; border: 1px solid rgba(255,123,123,.5); color: #ff9a9a; border-radius: 999px; padding: .35rem .8rem; font: 600 .78rem 'Poppins',sans-serif; cursor: pointer; transition: background .2s ease; }
+  .prof-btn-danger-sm:hover { background: rgba(255,123,123,.15); }
+  .prof-save-btn { background: linear-gradient(to bottom,#38c9d3,#12606e); border: 1.5px solid rgba(180,245,250,.85); color: #fff; border-radius: 999px; padding: .35rem 1rem; font: 600 .82rem 'Poppins',sans-serif; cursor: pointer; transition: box-shadow .2s ease; }
+  .prof-save-btn:hover { box-shadow: 0 0 14px rgba(45,226,230,.7); }
+  .prof-close-btn { background: transparent; border: 1.5px solid rgba(45,226,230,.4); color: #bfeff2; border-radius: 999px; padding: .35rem .9rem; font: 600 .82rem 'Poppins',sans-serif; cursor: pointer; transition: background .2s ease; }
+  .prof-close-btn:hover { background: rgba(45,226,230,.12); }
+  .prof-saved-msg { font-size: .75rem; color: #4ade80; margin-left: auto; padding: .3rem 0; display: none; }
+
+  /* ── Loading overlay ─────────────────────────────────────────────── */
+  #loading-overlay {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .8rem; z-index: 9999;
+  }
+  #loading-overlay .l-title { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+
+  /* ── RESPONSIVE tweaks ───────────────────────────────────────────── */
+  @media (max-width: 500px) {
+    .topbar h1 { font-size: .95rem; }
+    .content { padding: .6rem; }
+    .card { padding: .75rem; }
+  }
+
+  /* ══ MAIN APP — neon theme to match the login page ═══════════════════ */
+  #app-page, #loading-overlay {
+    --neon: #2de2e6; --teal: #2fb8c8;
+    --bg: #050816; --surface: #070b1c; --surface2: #0c1330;
+    --border: rgba(45,226,230,.28); --text: #ffffff; --text2: #9fb9c6;
+    --accent: #2fb8c8; --accent-h: #38c9d3;
+    --danger: #ff7b7b; --warn: #fbbf24; --ok: #4ade80;
+    --sleep: #6d7bf5; --travel: #fb923c; --class: #2de2e6; --study: #3ddc84; --free: #1a2342;
+    --radius: 4px; --shadow: 0 0 14px rgba(45,226,230,.12);
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  #app-page { background: #050816; color: #fff; position: relative; }
+  #app-page::before {            /* soft diagonal teal glow, like the login panel */
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: linear-gradient(to bottom left, rgba(56,201,201,.22) 0%, rgba(31,134,150,.10) 28%, transparent 55%);
+  }
+  #app-page > * { position: relative; z-index: 1; }
+
+  #app-page .topbar {
+    background: linear-gradient(100deg, #070b1c 45%, #0f4a5a 100%);
+    border-bottom: 2px solid var(--neon);
+    box-shadow: 0 0 10px var(--neon), 0 6px 28px rgba(45,226,230,.25);
+  }
+  #app-page .topbar h1 {
+    color: #fff; text-transform: uppercase; letter-spacing: .6px; font-weight: 800; font-size: 1.05rem;
+    text-shadow: 0 0 12px rgba(45,226,230,.75);
+  }
+  #app-page .topbar .user-label { color: #bfeff2; }
+
+  #app-page .card, #app-page .day-bar-wrap {
+    background: #070b1c; border: 1.5px solid rgba(45,226,230,.45);
+    box-shadow: 0 0 10px rgba(45,226,230,.28), inset 0 0 18px rgba(45,226,230,.07);
+  }
+  #app-page .card h2 { text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
+  #app-page .day-bar-label, #app-page .plan-day-label { color: var(--teal); }
+  #app-page .day-bar { border-radius: 999px; box-shadow: 0 0 10px rgba(45,226,230,.25); }
+  #app-page .seg-free { color: #9fb9c6; }
+
+  /* Underline-style fields, like the login form */
+  #app-page label { color: var(--teal); font-weight: 600; }
+  #app-page input[type="text"], #app-page input[type="email"], #app-page input[type="password"],
+  #app-page input[type="time"], #app-page input[type="number"], #app-page input[type="date"],
+  #app-page select, #app-page textarea {
+    background: transparent; color: #fff; border: none; border-bottom: 2px solid #d9dee8;
+    border-radius: 0; padding: .45rem .1rem; font-family: inherit; color-scheme: dark;
+  }
+  #app-page input:focus, #app-page select:focus, #app-page textarea:focus {
+    border-bottom-color: var(--teal); box-shadow: 0 2px 0 -1px var(--neon);
+  }
+  #app-page select option { background: #070b1c; color: #fff; }
+  #app-page input::placeholder { color: #6f8a97; }
+
+  /* Pill buttons */
+  #app-page .btn { border-radius: 999px; font-family: inherit; padding: .5rem 1.1rem; }
+  #app-page .btn-primary {
+    background: linear-gradient(to bottom, #38c9d3 0%, #12606e 100%);
+    border: 1.5px solid rgba(180,245,250,.85); color: #fff;
+  }
+  #app-page .btn-primary:hover { box-shadow: 0 0 18px rgba(45,226,230,.75); filter: brightness(1.12); background: linear-gradient(to bottom, #38c9d3 0%, #12606e 100%); }
+  #app-page .btn-ghost { background: transparent; color: #fff; border: 1.5px solid rgba(45,226,230,.6); }
+  #app-page .btn-ghost:hover { background: rgba(45,226,230,.15); box-shadow: 0 0 12px rgba(45,226,230,.5); }
+  #app-page .btn-danger { color: var(--danger); border-color: var(--danger); }
+  #app-page .btn-danger:hover { background: var(--danger); color: #050816; }
+  #app-page .btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+  /* Tabs, list items, blocks */
+  #app-page .stab { background: transparent; border: 1.5px solid rgba(45,226,230,.4); border-radius: 999px; color: #bfeff2; font-family: inherit; }
+  #app-page .stab:hover { background: rgba(45,226,230,.12); }
+  #app-page .stab.active { background: linear-gradient(to bottom, #38c9d3, #12606e); color: #fff; border-color: rgba(180,245,250,.85); box-shadow: 0 0 12px rgba(45,226,230,.55); }
+  #app-page .class-item, #app-page .subj-item, #app-page .study-block {
+    background: #0c1330; border: 1px solid rgba(45,226,230,.25); border-radius: 6px;
+  }
+  #app-page .class-item .ci-day { background: linear-gradient(to bottom, #38c9d3, #12606e); border-radius: 999px; padding: .1rem .5rem; }
+  #app-page .study-block:hover { border-color: var(--neon); box-shadow: 0 0 10px rgba(45,226,230,.3); }
+  #app-page .study-block.done { background: rgba(61,220,132,.09); border-color: rgba(61,220,132,.45); }
+  #app-page .break-block { border-color: rgba(45,226,230,.25); color: #7f9aa7; }
+  #app-page .s-weak   { background: rgba(255,123,123,.16); color: #ff9a9a; }
+  #app-page .s-avg    { background: rgba(251,191,36,.16);  color: #fbbf24; }
+  #app-page .s-strong { background: rgba(74,222,128,.16);  color: #6ee79a; }
+
+  /* Progress */
+  #app-page .prog-track { background: #0c1330; border: 1px solid rgba(45,226,230,.35); }
+  #app-page .prog-fill { background: linear-gradient(90deg, #12606e, var(--neon)); box-shadow: 0 0 8px rgba(45,226,230,.7); }
+  #app-page .prog-fill.ok { background: linear-gradient(90deg, #1f8a52, #4ade80); box-shadow: 0 0 8px rgba(74,222,128,.7); }
+  #app-page .prog-fill.warn { background: linear-gradient(90deg, #b7791f, #fbbf24); box-shadow: 0 0 8px rgba(251,191,36,.6); }
+
+  /* Toggle + banners + empty states */
+  #app-page .toggle { background: #1a2342; border: 1px solid rgba(45,226,230,.4); }
+  #app-page .toggle:has(input:checked) { background: var(--teal); box-shadow: 0 0 10px rgba(45,226,230,.6); }
+  #app-page .banner.leftout { background: rgba(255,123,123,.10); border-color: rgba(255,123,123,.4); color: #ffb0b0; }
+  #app-page .banner.info { background: rgba(45,226,230,.08); border-color: rgba(45,226,230,.35); color: var(--neon); }
+  #app-page .empty .e-title { color: #fff; }
+  #app-page hr { border-top-color: rgba(45,226,230,.25); }
+  #app-page .err { color: #ff9a9a; }
+
+  /* Loading screen */
+  #loading-overlay { background: #050816; font-family: 'Poppins', sans-serif; }
+  #loading-overlay .l-title { color: #fff; text-shadow: 0 0 12px rgba(45,226,230,.8); text-transform: uppercase; letter-spacing: .5px; }
+  #loading-overlay .spinner { border-color: rgba(45,226,230,.2); border-top-color: var(--neon); box-shadow: 0 0 14px rgba(45,226,230,.5); }
+
+  /* AM/PM time picker */
+  .tp { display: flex; align-items: center; gap: .15rem; margin-top: .1rem; }
+  #app-page .tp select { width: auto; flex: 1; min-width: 0; padding: .45rem .1rem; text-align: center; cursor: pointer; }
+  #app-page .tp .tp-fixed { padding: 0 .35rem; letter-spacing: .5px; user-select: none; }
+  #app-page .tp .tp-ap { flex: 0 0 auto; font-weight: 700; color: var(--teal, var(--accent)); }
+  .tp-sep { color: #fff; font-weight: 700; }
+
+  /* ── Timetable upload / import ────────────────────────────────────── */
+  .tt-upload { margin-bottom: .8rem; }
+  .tt-drop {
+    border: 2px dashed var(--accent); border-radius: 10px; padding: .9rem .8rem;
+    text-align: center; cursor: pointer; font-size: .82rem; color: inherit;
+    background: rgba(102,120,255,.08); transition: background var(--transition);
+  }
+  .tt-drop:hover, .tt-drop.drag { background: rgba(102,120,255,.2); }
+  .tt-drop strong { display: block; font-size: .88rem; margin-bottom: .15rem; }
+  .tt-drop small { opacity: .75; }
+  .tt-status { font-size: .78rem; margin-top: .4rem; min-height: 1.1em; opacity: .9; }
+  .tt-status.error { color: var(--danger); opacity: 1; }
+  .tt-bar { height: 5px; border-radius: 5px; background: rgba(128,128,128,.25); overflow: hidden; margin-top: .3rem; }
+  .tt-bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .tt-or { text-align: center; font-size: .72rem; opacity: .65; margin: .5rem 0 .2rem; }
+
+  #tt-modal {
+    position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.6);
+    display: flex; align-items: center; justify-content: center; padding: 1rem;
+  }
+  #tt-modal .tt-box {
+    background: var(--surface); color: var(--text); border: 1px solid var(--border);
+    border-radius: 12px; width: 100%; max-width: 640px; max-height: 90vh;
+    display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.4);
+  }
+  #tt-modal .tt-head { padding: .9rem 1rem .5rem; }
+  #tt-modal .tt-head h3 { font-size: 1rem; margin-bottom: .2rem; }
+  #tt-modal .tt-head p { font-size: .78rem; color: var(--text2); }
+  #tt-modal .tt-rows { overflow: auto; padding: .3rem 1rem; flex: 1; }
+  #tt-modal .tt-row {
+    display: grid; grid-template-columns: 82px 1fr 104px 104px 34px; gap: .35rem;
+    align-items: center; margin-bottom: .35rem;
+  }
+  #tt-modal .tt-row.tt-hdr { font-size: .7rem; font-weight: 700; color: var(--text2); text-transform: uppercase; margin-bottom: .2rem; }
+  #tt-modal .tt-row input, #tt-modal .tt-row select {
+    width: 100%; min-width: 0; padding: .3rem .35rem; font-size: .8rem;
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+  }
+  #tt-modal .tt-foot {
+    padding: .7rem 1rem .9rem; border-top: 1px solid var(--border);
+    display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between;
+  }
+  #tt-modal .tt-foot label { font-size: .78rem; display: flex; align-items: center; gap: .35rem; color: var(--text2); }
+  #tt-modal .tt-btns { display: flex; gap: .4rem; }
+  #tt-modal .btn-danger { color: var(--danger); }
+  @media (max-width: 520px) {
+    #tt-modal .tt-row { grid-template-columns: 70px 1fr 90px 90px 30px; gap: .25rem; }
+  }
+
+  /* ── Exam timetable review modal ──────────────────────────────────── */
+  #ex-modal { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.6);
+    display: flex; align-items: center; justify-content: center; padding: 1rem; }
+  #ex-modal .ex-box { background: #070b1c; color: #fff; border: 1.5px solid rgba(45,226,230,.45);
+    border-radius: 12px; width: 100%; max-width: 640px; max-height: 90vh; display: flex; flex-direction: column;
+    box-shadow: 0 0 18px rgba(45,226,230,.3); font-family: 'Poppins', sans-serif; }
+  #ex-modal .ex-head { padding: .9rem 1rem .5rem; }
+  #ex-modal .ex-head h3 { font-size: 1rem; margin-bottom: .2rem; }
+  #ex-modal .ex-head p { font-size: .78rem; color: #9fb9c6; }
+  #ex-modal .ex-rows { overflow: auto; padding: .3rem 1rem; flex: 1; }
+  #ex-modal .ex-row { display: grid; grid-template-columns: 140px 1fr 1fr 34px; gap: .35rem; align-items: center; margin-bottom: .35rem; }
+  #ex-modal .ex-row.ex-hdr { font-size: .7rem; font-weight: 700; color: #9fb9c6; text-transform: uppercase; }
+  #ex-modal .ex-txt { font-size: .75rem; color: #9fb9c6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #ex-modal input, #ex-modal select { width: 100%; min-width: 0; padding: .3rem .35rem; font-size: .8rem;
+    background: #0c1330; color: #fff; border: 1px solid rgba(45,226,230,.35); border-radius: 6px; color-scheme: dark; }
+  #ex-modal .ex-foot { padding: .7rem 1rem .9rem; border-top: 1px solid rgba(45,226,230,.25); display: flex; justify-content: flex-end; gap: .4rem; }
+  @media (max-width: 520px) { #ex-modal .ex-row { grid-template-columns: 120px 1fr 1fr 30px; } }
+
+  /* Two-page navigation */
+  #app-page .page-nav { display: flex; align-items: center; justify-content: center; gap: .6rem; margin: .2rem auto 1rem; max-width: 420px; }
+  #app-page .pn-btn { display: inline-flex; align-items: center; gap: .5rem; padding: .45rem 1.1rem; border-radius: 999px; cursor: pointer;
+    font-family: inherit; font-size: .85rem; font-weight: 700; letter-spacing: .3px; text-transform: uppercase;
+    background: transparent; color: #bfeff2; border: 1.5px solid rgba(45,226,230,.4); transition: all .15s; }
+  #app-page .pn-btn:hover { background: rgba(45,226,230,.12); }
+  #app-page .pn-btn.active { background: linear-gradient(to bottom, #38c9d3, #12606e); color: #fff; border-color: rgba(180,245,250,.85); box-shadow: 0 0 14px rgba(45,226,230,.6); }
+  #app-page .pn-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  #app-page .pn-num { display: inline-grid; place-items: center; width: 1.45rem; height: 1.45rem; border-radius: 50%;
+    border: 1.5px solid currentColor; font-size: .75rem; }
+  #app-page .pn-line { flex: 1; height: 2px; max-width: 60px; background: linear-gradient(90deg, rgba(45,226,230,.2), var(--neon), rgba(45,226,230,.2)); box-shadow: 0 0 8px rgba(45,226,230,.6); }
+  #app-page .page-cta { display: flex; flex-direction: column; align-items: center; gap: .6rem; margin: 1.2rem 0 .6rem; }
+  #app-page .page-cta .btn { padding: .7rem 2rem; font-size: .95rem; }
+  #app-page .page-top { margin-bottom: .8rem; }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay">
+  <div class="spinner" style="width:36px;height:36px;border-width:4px;"></div>
+  <div class="l-title">⏳ Leftover Time Planner</div>
+  <div class="text-sm">Loading…</div>
+</div>
+
+<!-- Auth Page -->
+<div id="auth-page">
+  <div class="auth-box" id="auth-box" data-mode="signin">
+    <div class="auth-panel" aria-hidden="true"></div>
+    <div class="auth-welcome auth-swap a-in" aria-hidden="true">Welcome<br>Back!</div>
+    <div class="auth-welcome auth-swap a-up" aria-hidden="true">Welcome!</div>
+
+    <!-- Login -->
+    <div class="auth-side auth-swap a-in">
+      <form id="signin-form" class="auth-form" onsubmit="doSignIn(event)">
+        <h2 class="auth-title">Login</h2>
+        <div class="a-field">
+          <input type="email" id="si-email" autocomplete="email" placeholder=" " required>
+          <label for="si-email">Email</label>
+          <span class="a-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg></span>
+        </div>
+        <div class="a-field">
+          <input type="password" id="si-pass" autocomplete="current-password" placeholder=" " required>
+          <label for="si-pass">Password</label>
+          <button type="button" class="a-icon a-eye" id="toggle-pw" aria-label="Show password" aria-pressed="false" onclick="togglePw('si-pass', this)"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2zm-7-2a2 2 0 0 1 4 0v2h-4V7z"/></svg></button>
+        </div>
+        <div id="si-msg"></div>
+        <button class="a-btn" type="submit" id="si-btn">Login</button>
+        <p class="a-switch">Don't have an account?<button type="button" onclick="showAuthTab('signup')">Sign Up</button></p>
+      </form>
+    </div>
+
+    <!-- Register -->
+    <div class="auth-side auth-swap a-up">
+      <form id="signup-form" class="auth-form" onsubmit="doSignUp(event)">
+        <h2 class="auth-title">Register</h2>
+        <div class="a-field">
+          <input type="text" id="su-user" autocomplete="username" placeholder=" " required>
+          <label for="su-user">Username</label>
+          <span class="a-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg></span>
+        </div>
+        <div class="a-field">
+          <input type="email" id="su-email" autocomplete="email" placeholder=" " required>
+          <label for="su-email">Email</label>
+          <span class="a-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm9 7.2L4.6 7 4 8.1l8 5.2 8-5.2L19.4 7 12 12.2z"/></svg></span>
+        </div>
+        <div class="a-field">
+          <input type="password" id="su-pass" autocomplete="new-password" placeholder=" " required minlength="6">
+          <label for="su-pass">Password</label>
+          <button type="button" class="a-icon a-eye" id="toggle-pw2" aria-label="Show password" aria-pressed="false" onclick="togglePw('su-pass', this)"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2zm-7-2a2 2 0 0 1 4 0v2h-4V7z"/></svg></button>
+        </div>
+        <div id="su-msg"></div>
+        <button class="a-btn" type="submit" id="su-btn">Register</button>
+        <p class="a-switch">Already have an account?<button type="button" onclick="showAuthTab('signin')">Sign In</button></p>
+      </form>
+    </div>
+  </div>
+
+  <button class="a-local" onclick="enterLocalMode()">🔓 Try without an account <small>(local only)</small></button>
+</div>
+
+<!-- Main App -->
+<div id="app-page" class="app-shell hidden">
+  <header class="topbar">
+    <h1>⏳ Leftover Time Planner</h1>
+    <span class="user-label" id="user-email-label"></span>
+    <button class="prof-btn" id="topbar-profile-btn" onclick="openProfileModal()" aria-label="View profile" title="View profile">
+      <span id="topbar-avatar-emoji">👤</span>
+    </button>
+    <button class="btn btn-ghost btn-sm" onclick="doSignOut()">Sign out</button>
+  </header>
+
+  <main class="content">
+    <!-- Page switcher -->
+    <nav class="page-nav" aria-label="App pages">
+      <button type="button" class="pn-btn active" id="pn-setup" onclick="showPage('setup')" aria-current="page"><span class="pn-num">1</span> Setup</button>
+      <span class="pn-line" aria-hidden="true"></span>
+      <button type="button" class="pn-btn" id="pn-plan" onclick="showPage('plan')"><span class="pn-num">2</span> My Plan</button>
+    </nav>
+
+    <!-- ═════════ PAGE 1 — SETUP ═════════ -->
+    <section id="page-setup" class="page" aria-label="Setup">
+      <div class="two-col">
+        <div>
+  <!-- Daily Settings -->
+          <div class="card">
+            <h2>⚙️ Daily Settings</h2>
+            <div class="form-row">
+              <label style="flex:1">Wake-up time
+                <div class="tp" data-target="wake" data-fixed="AM" data-onchange="settingsChanged"></div><input type="hidden" id="wake" value="06:30">
+              </label>
+              <label style="flex:1">Bedtime
+                <div class="tp" data-target="bed" data-fixed="PM" data-onchange="settingsChanged"></div><input type="hidden" id="bed" value="22:30">
+              </label>
+            </div>
+            <div class="form-row">
+              <label style="flex:1">Travel to college (min)
+                <input type="number" id="travel-to" value="45" min="0" max="300" oninput="settingsChanged()">
+              </label>
+              <label style="flex:1">Travel home (min)
+                <input type="number" id="travel-home" value="45" min="0" max="300" oninput="settingsChanged()">
+              </label>
+            </div>
+            <div class="form-row">
+              <label style="flex:1">Dinner duration (min)
+                <input type="number" id="dinner-dur" value="30" min="0" max="120" oninput="settingsChanged()">
+              </label>
+              <label style="flex:1">Evening reminder
+                <div class="toggle-row" style="margin-top:.3rem">
+                  <label class="toggle" title="Enable/disable evening reminder">
+                    <input type="checkbox" id="reminder-toggle" onchange="toggleReminder()">
+                    <span class="toggle-knob"></span>
+                  </label>
+                  <span id="reminder-status" class="text-sm">Off</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+  <!-- Subjects -->
+          <div class="card">
+            <h2>📚 Subjects</h2>
+            <div class="tt-upload">
+              <button type="button" class="btn btn-ghost btn-sm" id="ex-toggle" aria-expanded="false" aria-controls="ex-panel" onclick="toggleExamUpload()">📝 Import exam timetable (PDF / image)</button>
+              <div id="ex-panel" class="hidden" style="margin-top:.6rem">
+                <div class="tt-drop" id="ex-drop" tabindex="0" role="button"
+                     aria-label="Upload exam timetable PDF or image"
+                     onclick="document.getElementById('ex-file').click()"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('ex-file').click();}">
+                  <strong>Choose your exam timetable file (PDF, JPG or PNG)</strong>
+                  <small>Tap to browse, or drag &amp; drop it here — we'll read the exam dates for you</small>
+                </div>
+                <input type="file" id="ex-file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*" class="hidden" onchange="handleExamFile(this.files[0]); this.value=''; toggleExamUpload(false);">
+              </div>
+              <div class="tt-status" id="ex-status" role="status" aria-live="polite"></div>
+              <div class="tt-bar hidden" id="ex-bar"><i></i></div>
+            </div>
+            <div id="subj-list" class="subj-list"></div>
+            <form onsubmit="addSubject(event)" novalidate>
+              <div class="form-row">
+                <label style="flex:1">Subject name
+                  <input type="text" id="subj-name" placeholder="e.g. Data Structures" maxlength="50" required>
+                </label>
+                <label style="flex:1">Strength
+                  <select id="subj-str">
+                    <option value="weak">Weak 😰</option>
+                    <option value="average" selected>Average 😐</option>
+                    <option value="strong">Strong 💪</option>
+                  </select>
+                </label>
+              </div>
+              <div class="form-row">
+                <label style="flex:1">Subject code (optional)
+                  <input type="text" id="subj-code" placeholder="e.g. CS301" maxlength="15">
+                </label>
+              </div>
+              <div class="form-row">
+                <label style="flex:1">Weekly goal (hrs)
+                  <input type="number" id="subj-goal" value="3" min="0.5" max="40" step="0.5">
+                </label>
+                <label style="flex:1">Exam date (optional)
+                  <input type="date" id="subj-exam">
+                </label>
+              </div>
+              <div id="subj-err" class="err hidden"></div>
+              <button class="btn btn-primary btn-sm" type="submit">➕ Add subject</button>
+            </form>
+          </div>
+        </div>
+        <div>
+  <!-- Timetable -->
+          <div class="card">
+            <h2>📅 College Timetable</h2>
+            <div class="tt-upload">
+              <button type="button" class="btn btn-ghost btn-sm" id="tt-toggle" aria-expanded="false" aria-controls="tt-panel" onclick="toggleTimetableUpload()">📤 Import timetable from PDF / image</button>
+              <div id="tt-panel" class="hidden" style="margin-top:.6rem">
+                <div class="tt-drop" id="tt-drop" tabindex="0" role="button"
+                     aria-label="Upload timetable PDF or image"
+                     onclick="document.getElementById('tt-file').click()"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('tt-file').click();}">
+                  <strong>Choose your timetable file (PDF, JPG or PNG)</strong>
+                  <small>Tap to browse, or drag &amp; drop it here — we'll read the classes for you</small>
+                </div>
+                <input type="file" id="tt-file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*" class="hidden" onchange="handleTimetableFile(this.files[0]); this.value='';">
+              </div>
+              <div class="tt-status" id="tt-status" role="status" aria-live="polite"></div>
+              <div class="tt-bar hidden" id="tt-bar"><i></i></div>
+            </div>
+            <div id="class-list" class="class-list"></div>
+            <form onsubmit="addClass(event)" novalidate>
+              <div class="form-row">
+                <label style="flex:1">Day
+                  <select id="cl-day">
+                    <option value="Mon">Monday</option>
+                    <option value="Tue">Tuesday</option>
+                    <option value="Wed">Wednesday</option>
+                    <option value="Thu">Thursday</option>
+                    <option value="Fri">Friday</option>
+                    <option value="Sat">Saturday</option>
+                  </select>
+                </label>
+                <label style="flex:1">Subject
+                  <select id="cl-subj"><option value="">— pick subject —</option></select>
+                </label>
+              </div>
+              <div class="form-row">
+                <label style="flex:1">Start
+                  <div class="tp" data-target="cl-start"></div><input type="hidden" id="cl-start" value="09:00">
+                </label>
+                <label style="flex:1">End
+                  <div class="tp" data-target="cl-end"></div><input type="hidden" id="cl-end" value="10:00">
+                </label>
+              </div>
+              <div id="cl-err" class="err hidden"></div>
+              <button class="btn btn-primary btn-sm" type="submit">➕ Add class</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="page-cta">
+        <div id="setup-err" class="err hidden"></div>
+        <button type="button" class="btn btn-primary" onclick="goToPlan()">✨ Generate my plan →</button>
+      </div>
+    </section>
+
+    <!-- ═════════ PAGE 2 — MY PLAN ═════════ -->
+    <section id="page-plan" class="page hidden" aria-label="My plan">
+      <div class="row page-top">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="showPage('setup')">← Edit setup</button>
+      </div>
+<!-- Day Bar -->
+    <div class="day-bar-wrap" aria-label="Today's time breakdown">
+      <div class="day-bar-label">Today's time split</div>
+      <div class="day-bar" id="day-bar" role="img" aria-label="Visual bar showing today's schedule"></div>
+      <div class="day-bar-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:var(--sleep)"></div> Sleep</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--travel)"></div> Travel</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--class)"></div> Classes</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--study)"></div> Study</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--free)"></div> Free</div>
+      </div>
+    </div>
+
+<!-- Goals Banner -->
+        <div id="leftout-banner"></div>
+
+      <div class="two-col">
+        <div>
+  <!-- Today's Goal -->
+          <div class="card" id="today-goal-card">
+            <h2>🎯 Today's Goal</h2>
+            <div id="today-goal-content">
+              <div class="empty">
+                <div class="e-icon">📋</div>
+                <div class="e-title">No plan yet</div>
+                <div>Add subjects &amp; settings to generate a plan.</div>
+              </div>
+            </div>
+          </div>
+
+  <!-- Weekly Goals -->
+          <div class="card">
+            <h2>📊 Weekly Goals</h2>
+            <div id="weekly-goals-content">
+              <div class="empty"><div class="e-icon">📈</div><div class="e-title">Add subjects to track progress</div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+  <!-- Study Plan -->
+          <div class="card">
+            <div class="row" style="margin-bottom:.8rem">
+              <h2 style="margin:0">🗓️ Study Plan</h2>
+              <div class="spacer"></div>
+              <button class="btn btn-ghost btn-sm" onclick="regeneratePlan()">🔄 Regenerate</button>
+            </div>
+            <div class="section-tabs" id="plan-day-tabs"></div>
+            <div id="plan-content">
+              <div class="empty">
+                <div class="e-icon">✏️</div>
+                <div class="e-title">Your study plan will appear here</div>
+                <div>Add at least one subject and configure your daily settings.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Firebase SDK -->
+
+<!-- ══════════════ PROFILE MODAL ══════════════ -->
+<div id="profile-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="prof-modal-title">
+  <div class="prof-box">
+    <!-- Header with avatar + name -->
+    <div class="prof-header">
+      <div class="prof-avatar" onclick="document.getElementById('prof-avatar-file').click()" title="Click to change avatar" aria-label="Change profile picture">
+        <span id="prof-avatar-emoji-modal">👤</span>
+        <img id="prof-avatar-img" src="" alt="" style="display:none">
+      </div>
+      <input type="file" id="prof-avatar-file" accept="image/*" onchange="handleAvatarUpload(this.files[0]); this.value='';">
+      <div class="prof-avatar-hint">tap to change picture</div>
+      <div class="prof-name" id="prof-modal-title" id="prof-display-name">—</div>
+      <div class="prof-email" id="prof-modal-email">—</div>
+      <div class="prof-badge" id="prof-modal-mode">🌐 Cloud account</div>
+    </div>
+
+    <div class="prof-body">
+      <!-- Streak -->
+      <div class="prof-streak" id="prof-streak-row">
+        <span class="ps-fire">🔥</span>
+        <span class="ps-txt" id="prof-streak-txt">0-day streak</span>
+      </div>
+
+      <!-- Stats -->
+      <div class="prof-section">
+        <div class="prof-section-title">📊 This week</div>
+        <div class="prof-stat-grid">
+          <div class="prof-stat">
+            <div class="ps-val" id="prof-stat-done">0</div>
+            <div class="ps-lbl">Blocks done</div>
+          </div>
+          <div class="prof-stat">
+            <div class="ps-val" id="prof-stat-hrs">0h</div>
+            <div class="ps-lbl">Hours studied</div>
+          </div>
+          <div class="prof-stat">
+            <div class="ps-val" id="prof-stat-subj">0</div>
+            <div class="ps-lbl">Subjects</div>
+          </div>
+          <div class="prof-stat">
+            <div class="ps-val" id="prof-stat-classes">0</div>
+            <div class="ps-lbl">Classes / week</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account info -->
+      <div class="prof-section">
+        <div class="prof-section-title">👤 Account info</div>
+        <div class="prof-info-row">
+          <span class="pir-key">🏷️ Display name</span>
+          <input class="prof-edit-field" id="prof-edit-name" type="text" maxlength="40" placeholder="Your name" aria-label="Edit display name">
+        </div>
+        <div class="prof-info-row">
+          <span class="pir-key">📧 Email</span>
+          <span class="pir-val" id="prof-info-email">—</span>
+        </div>
+        <div class="prof-info-row">
+          <span class="pir-key">🕐 Member since</span>
+          <span class="pir-val" id="prof-info-since">—</span>
+        </div>
+        <div class="prof-info-row">
+          <span class="pir-key">💾 Data stored</span>
+          <span class="pir-val" id="prof-info-storage">—</span>
+        </div>
+        <div class="prof-info-row">
+          <span class="pir-key">⏰ Wake / Sleep</span>
+          <span class="pir-val" id="prof-info-schedule">—</span>
+        </div>
+        <div class="prof-info-row">
+          <span class="pir-key">🚌 Daily commute</span>
+          <span class="pir-val" id="prof-info-commute">—</span>
+        </div>
+      </div>
+
+      <!-- Top subject -->
+      <div class="prof-section" id="prof-top-subj-section">
+        <div class="prof-section-title">🏆 Top subject this week</div>
+        <div id="prof-top-subj">—</div>
+      </div>
+    </div>
+
+    <div class="prof-footer">
+      <button class="prof-btn-danger-sm" onclick="confirmSignOut()">🚪 Sign out</button>
+      <span class="prof-saved-msg" id="prof-saved-msg">✅ Saved!</span>
+      <button class="prof-close-btn" onclick="closeProfileModal()">Close</button>
+      <button class="prof-save-btn" onclick="saveProfileChanges()">💾 Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Timetable import review -->
+<div id="tt-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="tt-title">
+  <div class="tt-box">
+    <div class="tt-head">
+      <h3 id="tt-title">📅 Review imported timetable</h3>
+      <p>Reading text from a file isn't perfect — please check each row, fix anything wrong, then import.</p>
+    </div>
+    <div class="tt-rows" id="tt-rows"></div>
+    <div class="tt-foot">
+      <div>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="ttAddRow()">➕ Add row</button>
+        <label style="margin-top:.4rem"><input type="checkbox" id="tt-replace"> Replace my existing timetable</label>
+      </div>
+      <div class="tt-btns">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="ttClose()">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="ttImport()">✅ Import classes</button>
+      </div>
+    </div>
+    <div class="err hidden" id="tt-err" style="padding:0 1rem .6rem"></div>
+  </div>
+</div>
+
+<!-- Exam timetable import review -->
+<div id="ex-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="ex-title">
+  <div class="ex-box">
+    <div class="ex-head">
+      <h3 id="ex-title">📝 Review exam dates</h3>
+      <p>Check each date and the subject it belongs to. Rows set to "— skip —" are ignored. Your study plan will be rearranged around these exams.</p>
+    </div>
+    <div class="ex-rows" id="ex-rows"></div>
+    <div class="ex-foot">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="exClose()">Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="exApply()">✅ Apply exam dates</button>
+    </div>
+    <div class="err hidden" id="ex-err" style="padding:0 1rem .6rem"></div>
+  </div>
+</div>
+
+<script type="module">
+// ══════════════════════════════════════════════════════════════════════════════
+//  FIREBASE CONFIGURATION  — swap the config block below to change projects
+// ══════════════════════════════════════════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged, updateProfile
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, getDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBUu3RUXFj-wtHvOigftPqUkObI7jCZeHw",          // ← replace
+  authDomain: "time-manager-57eb9.firebaseapp.com",
+  projectId: "time-manager-57eb9",
+  storageBucket: "time-manager-57eb9.appspot.com",
+  messagingSenderId: "644394466246",                    // ← replace
+  appId: "1:644394466246:web:40c8a8a0cb026ba9acd0c7"      // ← replace
+};
+
+const fbApp  = initializeApp(FIREBASE_CONFIG);
+const auth   = getAuth(fbApp);
+const db     = getFirestore(fbApp);
+
+// Expose to global scope so non-module JS can call them
+window._firebase = { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, doc, setDoc, getDoc, onSnapshot };
+
+// ── Auth state listener ────────────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  window._currentUser = user || null;
+  if (user) {
+    window._onLogin(user);
+  } else {
+    window._onLogout();
+  }
+});
+</script>
+
+<script>
+"use strict";
+// ══════════════════════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════════════════════
+const DEFAULT_SETTINGS = {
+  wake: "06:30", bed: "22:30", travelTo: 45, travelHome: 45,
+  dinnerDur: 30, reminder: false
+};
+let state = {
+  settings: { ...DEFAULT_SETTINGS },
+  subjects: [],         // { id, name, strength, goal, examDate }
+  classes: [],          // { id, day, subjectId, start, end }
+  plan: {},             // { YYYY-MM-DD: [ block... ] }
+  completions: {},      // { blockId: true }
+  weeklyHours: {},      // { subjectId: minutesDone_this_week }
+};
+let _unsub = null;      // Firestore listener unsubscribe
+let _reminderTimer = null;
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const uid  = () => Math.random().toString(36).slice(2,10);
+const today = () => new Date().toISOString().slice(0,10);
+const pad2  = n => String(n).padStart(2,"0");
+const toMin = t => { const [h,m]=t.split(":").map(Number); return h*60+m; };
+const fmt12 = t => { const [h,m]=String(t).split(":").map(Number); return `${(h%12)||12}:${pad2(m)} ${h<12?"AM":"PM"}`; };
+const fromMin= m => fmt12(`${pad2(Math.floor(m/60)%24)}:${pad2(m%60)}`);
+// ══════════════════════════════════════════════════════════════════════════════
+//  12-HOUR (AM/PM) TIME PICKERS — hidden input keeps the 24h "HH:MM" value
+// ══════════════════════════════════════════════════════════════════════════════
+function initTimePickers() {
+  const valDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+  document.querySelectorAll(".tp").forEach(tp => {
+    const input = $(tp.dataset.target);
+    const cb = tp.dataset.onchange;
+    const fixed = tp.dataset.fixed || "";
+    const label = input.closest("label") ? input.closest("label").textContent.trim() : "time";
+    const opt = (v, t, sel) => `<option value="${v}"${sel ? " selected" : ""}>${t}</option>`;
+    tp.innerHTML =
+      `<select class="tp-h" aria-label="${esc(label)} hour">${Array.from({length:12},(_,i)=>opt(i+1,i+1)).join("")}</select>` +
+      `<span class="tp-sep">:</span>` +
+      `<select class="tp-m" aria-label="${esc(label)} minute">${Array.from({length:12},(_,i)=>opt(i*5,pad2(i*5))).join("")}</select>` +
+      (fixed ? `<span class="tp-ap tp-fixed" aria-label="${fixed}">${fixed}</span>`
+        : `<select class="tp-ap" aria-label="${esc(label)} AM or PM"><option value="AM">AM</option><option value="PM">PM</option></select>`);
+    const H = tp.querySelector(".tp-h"), M = tp.querySelector(".tp-m");
+    const AP = fixed ? { value: fixed } : tp.querySelector(".tp-ap");
+    const sync = () => {
+      const [h, m] = (valDesc.get.call(input) || "00:00").split(":").map(Number);
+      H.value = (h % 12) || 12;
+      if (![...M.options].some(o => +o.value === m)) {        // keep odd minutes (e.g. old data)
+        const o = document.createElement("option"); o.value = m; o.textContent = pad2(m);
+        const next = [...M.options].find(x => +x.value > m);
+        M.insertBefore(o, next || null);
+      }
+      M.value = m; if (!fixed) AP.value = h < 12 ? "AM" : "PM";
+    };
+    const write = () => {
+      let h = (+H.value) % 12; if (AP.value === "PM") h += 12;
+      valDesc.set.call(input, `${pad2(h)}:${pad2(+M.value)}`);
+      if (cb && typeof window[cb] === "function") window[cb]();
+    };
+    [H, M, fixed ? null : AP].forEach(el => el && el.addEventListener("change", write));
+    // so code that does  $("wake").value = "07:00"  also updates the dropdowns
+    Object.defineProperty(input, "value", {
+      get() { return valDesc.get.call(this); },
+      set(v) { valDesc.set.call(this, v); sync(); },
+      configurable: true
+    });
+    sync();
+  });
+}
+initTimePickers();
+
+const dayName= d => ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d];
+const getWeekStart = () => {
+  const d = new Date(); d.setHours(0,0,0,0);
+  const dow = d.getDay(); // 0=Sun
+  d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1)); // Monday
+  return d.toISOString().slice(0,10);
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  THEME
+// ══════════════════════════════════════════════════════════════════════════════
+(function initTheme() {
+  const saved = localStorage.getItem("ltp-theme") ||
+    (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", saved);
+})();
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("ltp-theme", next);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  AUTH HELPERS (call firebase from non-module scope)
+// ══════════════════════════════════════════════════════════════════════════════
+function getFirebase() { return window._firebase; }
+
+function showAuthTab(tab) {
+  $("auth-box").dataset.mode = tab;   // CSS drives the panel morph + form swap
+  authMsg("si-msg", "", ""); authMsg("su-msg", "", "");
+}
+
+function togglePw(inputId, btn) {
+  const input = $(inputId);
+  const show = input.type === "password";
+  input.type = show ? "text" : "password";
+  btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+  btn.setAttribute("aria-pressed", String(show));
+}
+
+function authMsg(elId, text, type) {
+  const el = $(elId);
+  el.textContent = text;
+  el.className = `auth-msg ${type}`;
+  el.classList.toggle("hidden", !text);
+}
+
+async function doSignIn(e) {
+  e.preventDefault();
+  const email = $("si-email").value.trim();
+  const pass  = $("si-pass").value;
+  if (!validateEmail(email)) { authMsg("si-msg","Invalid email address","err-box"); return; }
+  if (pass.length < 6) { authMsg("si-msg","Password must be at least 6 characters","err-box"); return; }
+  const btn = $("si-btn"); btn.disabled = true; btn.textContent = "Signing in…";
+  try {
+    const fb = getFirebase();
+    await fb.signInWithEmailAndPassword(fb.auth, email, pass);
+  } catch(err) {
+    authMsg("si-msg", friendlyAuthError(err.code), "err-box");
+    btn.disabled = false; btn.textContent = "Login";
+  }
+}
+
+async function doSignUp(e) {
+  e.preventDefault();
+  const username = $("su-user").value.trim();
+  const email = $("su-email").value.trim();
+  const pass  = $("su-pass").value;
+  if (username.length < 2) { authMsg("su-msg","Username must be at least 2 characters","err-box"); return; }
+  if (!validateEmail(email)) { authMsg("su-msg","Invalid email address","err-box"); return; }
+  if (pass.length < 6) { authMsg("su-msg","Password must be at least 6 characters","err-box"); return; }
+  const btn = $("su-btn"); btn.disabled = true; btn.textContent = "Creating…";
+  try {
+    const fb = getFirebase();
+    const cred = await fb.createUserWithEmailAndPassword(fb.auth, email, pass);
+    try { await fb.updateProfile(cred.user, { displayName: username }); } catch (_) {}
+  } catch(err) {
+    authMsg("su-msg", friendlyAuthError(err.code), "err-box");
+    btn.disabled = false; btn.textContent = "Register";
+  }
+}
+
+async function doSignOut() {
+  if (window._localMode) {
+    window._localMode = false;
+    // Reset state
+    state = { settings: { ...DEFAULT_SETTINGS }, subjects: [], classes: [], plan: {}, completions: {}, weeklyHours: {} };
+    if (_unsub) { _unsub(); _unsub = null; }
+    $("app-page").classList.add("hidden"); showPage("setup");
+    $("auth-page").classList.remove("hidden");
+    return;
+  }
+  if (_unsub) { _unsub(); _unsub = null; }
+  const fb = getFirebase();
+  await fb.signOut(fb.auth);
+}
+
+function validateEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+// ── Local / guest mode (no Firebase account needed) ───────────────────────
+function enterLocalMode() {
+  window._localMode = true;
+  window._currentUser = null;
+  $("loading-overlay").classList.add("hidden");
+  $("auth-page").classList.add("hidden");
+  $("app-page").classList.remove("hidden");
+  $("user-email-label").textContent = "Local mode · data saved on this device";
+  const ls = localStorage.getItem("ltp-state-local");
+  if (ls) { try { Object.assign(state, JSON.parse(ls)); } catch(_){} }
+  applySettingsToUI();
+  buildSubjectDropdown();
+  renderAll();
+  scheduleReminderIfEnabled();
+}
+
+
+function friendlyAuthError(code) {
+  const map = {
+    "auth/invalid-email":           "Invalid email address.",
+    "auth/user-not-found":          "No account found with that email.",
+    "auth/wrong-password":          "Incorrect password. Please try again.",
+    "auth/email-already-in-use":    "An account with this email already exists.",
+    "auth/weak-password":           "Password must be at least 6 characters.",
+    "auth/too-many-requests":       "Too many attempts. Please wait and try again.",
+    "auth/network-request-failed":  "Network error. Check your connection.",
+    "auth/invalid-credential":      "Incorrect email or password.",
+  };
+  return map[code] || `Error: ${code}`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  LOGIN / LOGOUT callbacks (called by onAuthStateChanged)
+// ══════════════════════════════════════════════════════════════════════════════
+window._onLogin = async function(user) {
+  $("loading-overlay").classList.add("hidden");
+  $("auth-page").classList.add("hidden");
+  $("app-page").classList.remove("hidden");
+  $("user-email-label").textContent = esc(user.email);
+
+  // Load from Firestore with localStorage fallback
+  await loadUserData(user.uid);
+  applySettingsToUI();
+  buildSubjectDropdown();
+  renderAll();
+  scheduleReminderIfEnabled();
+};
+
+window._onLogout = function() {
+  $("loading-overlay").classList.add("hidden");
+  $("app-page").classList.add("hidden"); showPage("setup");
+  $("auth-page").classList.remove("hidden");
+  // Reset forms
+  $("si-btn").disabled = false; $("si-btn").textContent = "Login";
+  $("su-btn").disabled = false; $("su-btn").textContent = "Register";
+  $("si-email").value = ""; $("si-pass").value = "";
+  $("su-user").value = ""; $("su-email").value = ""; $("su-pass").value = "";
+  $("auth-box").dataset.mode = "signin";
+  authMsg("si-msg","",""); authMsg("su-msg","","");
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  FIRESTORE DATA PERSISTENCE
+// ══════════════════════════════════════════════════════════════════════════════
+async function loadUserData(uid) {
+  try {
+    const fb = getFirebase();
+    const ref = fb.doc(fb.db, "users", uid);
+    const snap = await fb.getDoc(ref);
+    if (snap.exists()) {
+      const d = snap.data();
+      state.settings   = { ...DEFAULT_SETTINGS, ...(d.settings || {}) };
+      state.subjects   = d.subjects   || [];
+      state.classes    = d.classes    || [];
+      state.plan       = d.plan       || {};
+      state.completions= d.completions|| {};
+      state.weeklyHours= d.weeklyHours|| {};
+    } else {
+      // first login — load from localStorage if available
+      const ls = localStorage.getItem("ltp-state");
+      if (ls) { try { Object.assign(state, JSON.parse(ls)); } catch(_){} }
+    }
+    // Real-time listener for multi-device sync
+    if (_unsub) _unsub();
+    _unsub = fb.onSnapshot(ref, snap2 => {
+      if (!snap2.exists()) return;
+      const d = snap2.data();
+      state.settings   = { ...DEFAULT_SETTINGS, ...(d.settings || {}) };
+      state.subjects   = d.subjects   || [];
+      state.classes    = d.classes    || [];
+      state.plan       = d.plan       || {};
+      state.completions= d.completions|| {};
+      state.weeklyHours= d.weeklyHours|| {};
+      applySettingsToUI();
+      buildSubjectDropdown();
+      renderAll();
+    });
+  } catch(err) {
+    console.warn("Firestore load failed, using localStorage:", err);
+    const ls = localStorage.getItem("ltp-state");
+    if (ls) { try { Object.assign(state, JSON.parse(ls)); } catch(_){} }
+  }
+}
+
+async function saveUserData() {
+  // Local mode: use a separate key so it never touches Firebase
+  if (window._localMode) {
+    localStorage.setItem("ltp-state-local", JSON.stringify(state));
+    return;
+  }
+  // localStorage fallback always (for Firebase-authed users too)
+  localStorage.setItem("ltp-state", JSON.stringify(state));
+  if (!window._currentUser) return;
+  try {
+    const fb = getFirebase();
+    const ref = fb.doc(fb.db, "users", window._currentUser.uid);
+    await fb.setDoc(ref, {
+      settings:    state.settings,
+      subjects:    state.subjects,
+      classes:     state.classes,
+      plan:        state.plan,
+      completions: state.completions,
+      weeklyHours: state.weeklyHours,
+    }, { merge: true });
+  } catch(err) { console.warn("Firestore save failed:", err); }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  SETTINGS UI
+// ══════════════════════════════════════════════════════════════════════════════
+function applySettingsToUI() {
+  const s = state.settings;
+  $("wake").value       = s.wake       || "06:30";
+  $("bed").value        = s.bed        || "22:30";
+  $("travel-to").value  = s.travelTo   ?? 45;
+  $("travel-home").value= s.travelHome ?? 45;
+  $("dinner-dur").value = s.dinnerDur  ?? 30;
+  $("reminder-toggle").checked = !!s.reminder;
+  $("reminder-status").textContent = s.reminder ? "On" : "Off";
+}
+
+function readSettingsFromUI() {
+  return {
+    wake:       $("wake").value,
+    bed:        $("bed").value,
+    travelTo:   Math.max(0, parseInt($("travel-to").value)  || 0),
+    travelHome: Math.max(0, parseInt($("travel-home").value)|| 0),
+    dinnerDur:  Math.max(0, parseInt($("dinner-dur").value) || 0),
+    reminder:   $("reminder-toggle").checked,
+  };
+}
+
+function settingsChanged() {
+  state.settings = readSettingsFromUI();
+  regeneratePlan();
+  saveUserData();
+}
+
+function toggleReminder() {
+  state.settings.reminder = $("reminder-toggle").checked;
+  $("reminder-status").textContent = state.settings.reminder ? "On" : "Off";
+  scheduleReminderIfEnabled();
+  saveUserData();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  SUBJECTS
+// ══════════════════════════════════════════════════════════════════════════════
+// Normalise for duplicate checks: case, spacing and punctuation are ignored
+const normName = s => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+const normCode = s => String(s || "").toUpperCase().replace(/[^A-Z0-9]+/g, "");
+// Pull a course code (e.g. CS301, 21CS32, MA-101) out of a subject label, if present
+function extractCode(label) {
+  const m = String(label || "").match(/\b(\d{0,2}[A-Za-z]{2,5}-?\d{2,4}[A-Za-z]?)\b/);
+  return m ? normCode(m[1]) : "";
+}
+function findDuplicateSubject(name, code) {
+  const n = normName(name), c = normCode(code);
+  return state.subjects.find(s =>
+    (n && normName(s.name) === n) ||
+    (c && s.code && normCode(s.code) === c) ||
+    (c && normCode(s.name) === c) ||
+    (n && s.code && normCode(s.code) === normCode(name)));
+}
+
+function addSubject(e) {
+  e.preventDefault();
+  const name = $("subj-name").value.trim().replace(/\s+/g, " ");
+  const code = normCode($("subj-code").value);
+  const str  = $("subj-str").value;
+  const goal = parseFloat($("subj-goal").value) || 3;
+  const exam = $("subj-exam").value || null;
+  if (!name) { showErr("subj-err","Subject name is required"); return; }
+  const dup = findDuplicateSubject(name, code || extractCode(name));
+  if (dup) {
+    showErr("subj-err", `"${dup.name}"${dup.code ? " (" + dup.code + ")" : ""} is already in your subjects — same name or code can't be added twice.`); return;
+  }
+  hideErr("subj-err");
+  state.subjects.push({ id: uid(), name, code: code || extractCode(name), strength: str, goal, examDate: exam });
+  $("subj-name").value = ""; $("subj-code").value = ""; $("subj-exam").value = "";
+  buildSubjectDropdown();
+  renderSubjects();
+  regeneratePlan();
+  saveUserData();
+}
+
+function removeSubject(id) {
+  const target = state.subjects.find(s => s.id === id);
+  // saved (locked) subjects can only be removed once no class uses them
+  if (target && target.locked && state.classes.some(c => c.subjectId === id)) return;
+  state.subjects = state.subjects.filter(s => s.id !== id);
+  state.classes  = state.classes.filter(c => c.subjectId !== id);
+  buildSubjectDropdown();
+  renderSubjects();
+  renderClasses();
+  regeneratePlan();
+  saveUserData();
+}
+
+function renderSubjects() {
+  const el = $("subj-list");
+  if (!state.subjects.length) {
+    el.innerHTML = `<div class="empty"><div class="e-icon">📚</div><div class="e-title">No subjects yet</div><div>Add a subject above to get started.</div></div>`;
+    return;
+  }
+  const pendingCount = state.subjects.filter(s => s.pending && !s.locked).length;
+  const banner = pendingCount ? `<div class="banner info" role="status">
+      <span class="banner-icon">📝</span>
+      <div>
+        <strong>${pendingCount} subject${pendingCount > 1 ? "s" : ""} imported from your timetable.</strong><br>
+        Set the strength, weekly goal and exam date below, then press <strong>Save subjects</strong>.
+        Once saved, these subjects <strong>can't be changed again</strong> (except the exam date).
+        <div style="margin-top:.5rem"><button type="button" class="btn btn-primary btn-sm" onclick="saveImportedSubjects()">💾 Save subjects</button></div>
+      </div>
+    </div>` : "";
+  el.innerHTML = banner + state.subjects.map(s => {
+    if (s.pending && !s.locked) {
+      return `<div class="subj-item" style="grid-template-columns:1fr;gap:.4rem">
+        <div class="row">
+          <div class="subj-name">${esc(s.name)}</div><div class="spacer"></div>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="removeSubject('${s.id}')" aria-label="Remove ${esc(s.name)}">✕</button>
+        </div>
+        <div class="form-row" style="margin:0">
+          <label style="flex:1">Strength
+            <select onchange="editSubject('${s.id}','strength',this.value)">
+              <option value="weak"${s.strength==="weak"?" selected":""}>Weak 😰</option>
+              <option value="average"${s.strength==="average"?" selected":""}>Average 😐</option>
+              <option value="strong"${s.strength==="strong"?" selected":""}>Strong 💪</option>
+            </select>
+          </label>
+          <label style="flex:1">Weekly goal (hrs)
+            <input type="number" min="0.5" max="40" step="0.5" value="${esc(s.goal)}" onchange="editSubject('${s.id}','goal',this.value)">
+          </label>
+          <label style="flex:1">Exam date
+            <input type="date" value="${esc(s.examDate || "")}" onchange="editSubject('${s.id}','examDate',this.value)">
+          </label>
+        </div>
+      </div>`;
+    }
+    const badgeCls = s.strength === "weak" ? "s-weak" : s.strength === "strong" ? "s-strong" : "s-avg";
+    const badgeTxt = { weak:"Weak 😰", average:"Average 😐", strong:"Strong 💪"}[s.strength];
+    const exam = s.examDate ? ` · Exam: ${s.examDate}` : "";
+    const inTimetable = state.classes.some(c => c.subjectId === s.id);
+    const action = (s.locked && inTimetable)
+      ? `<span title="Saved — can't be changed" aria-label="Locked" style="padding:0 .3rem">🔒</span>`
+      : `<button class="btn btn-danger btn-sm btn-icon" onclick="removeSubject('${s.id}')" aria-label="Remove ${esc(s.name)}">✕</button>`;
+    return `<div class="subj-item">
+      <div>
+        <div class="subj-name">${esc(s.name)}</div>
+        <div class="text-sm">${s.code && normName(s.code) !== normName(s.name) ? esc(s.code) + " · " : ""}${s.goal}h/week${s.locked ? "" : esc(exam)}</div>
+        ${s.locked ? `<label class="text-sm" style="margin-top:.3rem">Exam date
+          <input type="date" value="${esc(s.examDate || "")}" onchange="editSubject('${s.id}','examDate',this.value)" aria-label="Exam date for ${esc(s.name)}">
+        </label>` : ""}
+      </div>
+      <span class="strength-badge ${badgeCls}">${badgeTxt}</span>
+      ${action}
+    </div>`;
+  }).join("");
+}
+
+// Edit an imported subject — only allowed until the user presses Save
+function editSubject(id, field, value) {
+  const s = state.subjects.find(x => x.id === id);
+  if (!s) return;
+  if (s.locked && field !== "examDate") return;     // after saving only the exam date stays editable
+  if (field === "goal") s.goal = Math.min(40, Math.max(0.5, parseFloat(value) || 3));
+  else if (field === "examDate") s.examDate = value || null;
+  else if (field === "strength") s.strength = value;
+  regeneratePlan();
+  saveUserData();
+}
+
+function saveImportedSubjects() {
+  const pending = state.subjects.filter(s => s.pending && !s.locked);
+  if (!pending.length) return;
+  if (!confirm("Save these subjects?\n\nAfter saving you will NOT be able to change strength or weekly goal again. You can still set or change the exam date.")) return;
+  pending.forEach(s => { s.locked = true; s.pending = false; });
+  renderSubjects();
+  regeneratePlan();
+  saveUserData();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  CLASSES / TIMETABLE
+// ══════════════════════════════════════════════════════════════════════════════
+function buildSubjectDropdown() {
+  const sel = $("cl-subj");
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">— pick subject —</option>` +
+    state.subjects.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
+  if (cur) sel.value = cur;
+}
+
+function addClass(e) {
+  e.preventDefault();
+  const day  = $("cl-day").value;
+  const subId= $("cl-subj").value;
+  const start= $("cl-start").value;
+  const end  = $("cl-end").value;
+  if (!subId) { showErr("cl-err","Please select a subject"); return; }
+  if (!start || !end) { showErr("cl-err","Please set start and end times"); return; }
+  if (toMin(end) <= toMin(start)) { showErr("cl-err","End time must be after start time"); return; }
+  hideErr("cl-err");
+  state.classes.push({ id: uid(), day, subjectId: subId, start, end });
+  renderClasses();
+  regeneratePlan();
+  saveUserData();
+}
+
+// A subject whose last class was removed from the timetable is removed too
+// (even if it was locked — it no longer exists in the timetable).
+function pruneOrphanSubjects(subjectIds) {
+  const ids = new Set(subjectIds);
+  const orphans = state.subjects.filter(s => ids.has(s.id) && !state.classes.some(c => c.subjectId === s.id));
+  if (!orphans.length) return [];
+  const gone = new Set(orphans.map(s => s.id));
+  state.subjects = state.subjects.filter(s => !gone.has(s.id));
+  Object.keys(state.weeklyHours || {}).forEach(k => { if (gone.has(k)) delete state.weeklyHours[k]; });
+  return orphans;
+}
+
+function removeClass(id) {
+  const cls = state.classes.find(c => c.id === id);
+  state.classes = state.classes.filter(c => c.id !== id);
+  if (cls) pruneOrphanSubjects([cls.subjectId]);
+  buildSubjectDropdown();
+  renderSubjects();
+  renderClasses();
+  regeneratePlan();
+  saveUserData();
+}
+
+function renderClasses() {
+  const el = $("class-list");
+  if (!state.classes.length) {
+    el.innerHTML = `<div class="empty"><div class="e-icon">📅</div><div class="e-title">No classes yet</div><div>Add your college timetable above.</div></div>`;
+    return;
+  }
+  const order = ["Mon","Tue","Wed","Thu","Fri","Sat"];
+  const sorted = [...state.classes].sort((a,b) =>
+    order.indexOf(a.day) - order.indexOf(b.day) || toMin(a.start) - toMin(b.start));
+  el.innerHTML = sorted.map(c => {
+    const sub = state.subjects.find(s => s.id === c.subjectId);
+    const name = sub ? sub.name : "Unknown";
+    return `<div class="class-item">
+      <span class="ci-day">${esc(c.day)}</span>
+      <span class="ci-sub">${esc(name)}</span>
+      <span class="ci-time">${fmt12(c.start)} – ${fmt12(c.end)}</span>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="removeClass('${c.id}')" aria-label="Remove class">✕</button>
+    </div>`;
+  }).join("");
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  TWO-PAGE LAYOUT  (1 = Setup, 2 = My Plan)
+// ══════════════════════════════════════════════════════════════════════════════
+function showPage(name) {
+  const plan = name === "plan";
+  $("page-setup").classList.toggle("hidden", plan);
+  $("page-plan").classList.toggle("hidden", !plan);
+  $("pn-setup").classList.toggle("active", !plan);
+  $("pn-plan").classList.toggle("active", plan);
+  $("pn-setup").removeAttribute("aria-current");
+  $("pn-plan").removeAttribute("aria-current");
+  (plan ? $("pn-plan") : $("pn-setup")).setAttribute("aria-current", "page");
+  hideErr("setup-err");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function goToPlan() {
+  if (!state.subjects.length) { showErr("setup-err", "Add at least one subject first, then generate your plan."); return; }
+  showPage("plan");
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  STUDY PLAN GENERATION
+// ══════════════════════════════════════════════════════════════════════════════
+const BLOCK_MIN  = 40;
+const BREAK_MIN  = 10;
+const REST_AFTER_HOME = 30;
+const REST_BEFORE_BED = 30;
+const DAYS_RANGE = 7; // generate plan for 7 days
+
+// Weight of a subject on a SPECIFIC day: the closer the exam is to that day, the
+// more study time it gets; once its exam is over it drops out of the plan.
+function getSubjectWeight(subj, dateStr) {
+  const baseW = { weak: 3, average: 2, strong: 1 }[subj.strength] || 2;
+  if (!subj.examDate) return baseW;
+  const ref = new Date((dateStr || today()) + "T00:00:00");
+  const ex  = new Date(subj.examDate + "T00:00:00");
+  const daysLeft = Math.round((ex - ref) / 86400000);
+  if (daysLeft < 0) return 0;                       // exam already over on that day
+  if (daysLeft > 21) return baseW;
+  return baseW + Math.round(5 * (1 - daysLeft / 21));   // up to +5 on exam eve / exam day
+}
+function examTag(subjectId, dateStr) {
+  const s = state.subjects.find(x => x.id === subjectId);
+  if (!s || !s.examDate) return "";
+  const d = Math.round((new Date(s.examDate + "T00:00:00") - new Date(dateStr + "T00:00:00")) / 86400000);
+  if (d < 0 || d > 21) return "";
+  return ` · 📝 ${d === 0 ? "exam today" : d === 1 ? "exam tomorrow" : "exam in " + d + " days"}`;
+}
+
+function getTodayClassMinutes(dateStr) {
+  const d = new Date(dateStr);
+  const dName = dayName(d.getDay());
+  return state.classes
+    .filter(c => c.day === dName)
+    .reduce((sum, c) => sum + toMin(c.end) - toMin(c.start), 0);
+}
+
+function getStudyWindow(dateStr) {
+  const s = state.settings;
+  const wakeMin = toMin(s.wake);
+  const bedMin  = toMin(s.bed);
+  // Arrive home = wake + travelTo + classTime + travelHome (approx)
+  // We use a simpler approach: studyStart = arriveHome + rest
+  // arriveHome ≈ wake + travelTo + classMins + travelHome but we don't track last-class end
+  // So: studyStart = wake + travelTo + classMins + travelHome + 30 min rest
+  const classMins = getTodayClassMinutes(dateStr);
+  const arriveHome = wakeMin + (s.travelTo||0) + classMins + (s.travelHome||0);
+  const studyStart = arriveHome + REST_AFTER_HOME;
+  const studyEnd   = bedMin - REST_BEFORE_BED;
+  // Remove dinner window (dinner duration)
+  // We'll place dinner in the middle
+  const dinnerStart = studyStart + Math.floor((studyEnd - studyStart) / 2);
+  const dinnerEnd   = dinnerStart + (s.dinnerDur || 30);
+  if (studyEnd <= studyStart) return [];
+  // Two windows: before and after dinner
+  const windows = [];
+  if (dinnerStart > studyStart) windows.push([studyStart, dinnerStart]);
+  if (dinnerEnd < studyEnd)     windows.push([dinnerEnd, studyEnd]);
+  return windows;
+}
+
+function sliceIntoBlocks(windows) {
+  const blocks = [];
+  for (const [winStart, winEnd] of windows) {
+    let cursor = winStart;
+    while (cursor + BLOCK_MIN <= winEnd) {
+      blocks.push({ startMin: cursor, endMin: cursor + BLOCK_MIN });
+      cursor += BLOCK_MIN + BREAK_MIN;
+    }
+  }
+  return blocks;
+}
+
+function getWeeklyDeficit() {
+  // Returns { subjectId: deficitBlocks } based on how much was missed in last 7 days
+  const deficit = {};
+  const ws = getWeekStart();
+  for (const dateStr of Object.keys(state.plan)) {
+    if (dateStr < ws) continue;
+    for (const blk of (state.plan[dateStr] || [])) {
+      if (!blk.subjectId) continue;
+      if (!state.completions[blk.id]) {
+        deficit[blk.subjectId] = (deficit[blk.subjectId] || 0) + 1;
+      }
+    }
+  }
+  return deficit;
+}
+
+function assignSubjectsToBlocks(blocks, dateStr) {
+  if (!state.subjects.length || !blocks.length) return [];
+  const deficit = getWeeklyDeficit();
+  const weights = state.subjects.map(s => {
+    const base = getSubjectWeight(s, dateStr);
+    return { id: s.id, name: s.name, w: base > 0 ? base + (deficit[s.id] || 0) * 0.5 : 0 };
+  }).filter(x => x.w > 0);                           // subjects whose exam is over are left out
+  if (!weights.length) return [];
+  const totalW = weights.reduce((s,x) => s+x.w, 0);
+  if (totalW === 0) return [];
+
+  // Distribute blocks proportionally
+  let allocated = weights.map(s => ({
+    id: s.id, name: s.name,
+    n: Math.round((s.w / totalW) * blocks.length)
+  }));
+  // Fix rounding
+  let diff = blocks.length - allocated.reduce((s,x)=>s+x.n,0);
+  allocated.sort((a,b) => b.n - a.n);
+  for (let i = 0; diff > 0; i = (i+1)%allocated.length, diff--) allocated[i].n++;
+  for (let i = 0; diff < 0; i = (i+1)%allocated.length, diff++) {
+    if (allocated[i].n > 0) allocated[i].n--;
+  }
+
+  // Build assignment array (avoid back-to-back same subject)
+  const pool = [];
+  for (const a of allocated) {
+    for (let i=0; i<a.n; i++) pool.push({ id: a.id, name: a.name });
+  }
+  // Shuffle with no-consecutive constraint
+  const arranged = shuffleNoConsec(pool);
+
+  return blocks.map((blk, i) => ({
+    id: `${dateStr}-${i}-${uid()}`,
+    subjectId: arranged[i]?.id || null,
+    subjectName: arranged[i]?.name || "Free",
+    startMin: blk.startMin,
+    endMin: blk.endMin,
+  }));
+}
+
+function shuffleNoConsec(arr) {
+  if (arr.length <= 1) return arr;
+  const out = [], pool = [...arr];
+  let last = null;
+  while (pool.length) {
+    // Find an item different from last
+    let idx = pool.findIndex(x => x.id !== (last && last.id));
+    if (idx === -1) idx = 0; // give up, just append
+    last = pool.splice(idx, 1)[0];
+    out.push(last);
+  }
+  return out;
+}
+
+function generatePlanForDate(dateStr) {
+  const windows = getStudyWindow(dateStr);
+  const blocks  = sliceIntoBlocks(windows);
+  return assignSubjectsToBlocks(blocks, dateStr);
+}
+
+function regeneratePlan() {
+  const newPlan = {};
+  for (let i=0; i<DAYS_RANGE; i++) {
+    const d = new Date(); d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().slice(0,10);
+    newPlan[dateStr] = generatePlanForDate(dateStr);
+  }
+  state.plan = newPlan;
+  renderAll();
+  saveUserData();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  RENDER ALL
+// ══════════════════════════════════════════════════════════════════════════════
+function renderAll() {
+  // Clean up imported subjects that are no longer in the timetable
+  // (e.g. their classes were removed before this rule existed).
+  const stale = state.subjects.filter(s => (s.locked || s.pending) && !state.classes.some(c => c.subjectId === s.id));
+  if (stale.length) {
+    const gone = new Set(stale.map(s => s.id));
+    state.subjects = state.subjects.filter(s => !gone.has(s.id));
+    Object.keys(state.weeklyHours || {}).forEach(k => { if (gone.has(k)) delete state.weeklyHours[k]; });
+    buildSubjectDropdown();
+    saveUserData();
+  }
+  renderSubjects();
+  renderClasses();
+  renderDayBar();
+  renderPlan();
+  renderTodayGoal();
+  renderWeeklyGoals();
+  renderLeftoutBanner();
+}
+
+// ── Day Bar ────────────────────────────────────────────────────────────────
+function renderDayBar() {
+  const s      = state.settings;
+  const dateStr= today();
+  const wakeMin= toMin(s.wake);
+  const bedMin = toMin(s.bed);
+  const totalDay= 1440; // 24h
+  const dayLen = bedMin > wakeMin ? (bedMin - wakeMin) : (1440 - wakeMin + bedMin);
+
+  const classMins  = getTodayClassMinutes(dateStr);
+  const travelMins = (s.travelTo||0) + (s.travelHome||0);
+  const sleepMins  = 1440 - dayLen; // rest of day
+  const studyBlks  = (state.plan[dateStr] || []);
+  const studyMins  = studyBlks.length * BLOCK_MIN;
+  const freeMins   = Math.max(0, dayLen - classMins - travelMins - studyMins);
+
+  const segs = [
+    { cls: "seg-sleep",  pct: sleepMins/14.4,  label: "😴 Sleep" },
+    { cls: "seg-travel", pct: travelMins/14.4, label: "🚌 Travel" },
+    { cls: "seg-class",  pct: classMins/14.4,  label: "🏫 Classes" },
+    { cls: "seg-study",  pct: studyMins/14.4,  label: "📖 Study" },
+    { cls: "seg-free",   pct: freeMins/14.4,   label: "☕ Free" },
+  ].filter(s => s.pct > 0);
+
+  const bar = $("day-bar");
+  bar.innerHTML = segs.map(s => `
+    <div class="day-bar-seg ${s.cls}" style="width:${s.pct.toFixed(1)}%"
+         title="${s.label} (${Math.round(s.pct * 14.4)} min)">
+      ${s.pct > 8 ? s.label : ""}
+    </div>`).join("");
+}
+
+// ── Plan Tabs ──────────────────────────────────────────────────────────────
+let _activeDay = today();
+function renderPlan() {
+  const tabsEl = $("plan-day-tabs");
+  const contentEl = $("plan-content");
+  const dates = Object.keys(state.plan).sort();
+  if (!dates.length || !state.subjects.length) {
+    tabsEl.innerHTML = "";
+    contentEl.innerHTML = `<div class="empty"><div class="e-icon">✏️</div><div class="e-title">Your study plan will appear here</div><div>Add at least one subject and configure your daily settings.</div></div>`;
+    return;
+  }
+
+  if (!dates.includes(_activeDay)) _activeDay = dates[0];
+
+  tabsEl.innerHTML = dates.map(d => {
+    const dt = new Date(d + "T12:00:00");
+    const label = dt.toLocaleDateString("en-US", { weekday:"short", month:"short", day:"numeric" });
+    const isToday = d === today();
+    return `<button class="stab${d === _activeDay ? " active" : ""}"
+      onclick="setActivePlanDay('${d}')" aria-pressed="${d === _activeDay}">
+      ${esc(label)}${isToday ? " 📌" : ""}
+    </button>`;
+  }).join("");
+
+  renderPlanDay(_activeDay, contentEl);
+}
+
+function setActivePlanDay(d) {
+  _activeDay = d;
+  renderPlan();
+}
+
+function renderPlanDay(dateStr, contentEl) {
+  const blocks = state.plan[dateStr] || [];
+  if (!blocks.length) {
+    contentEl.innerHTML = `<div class="empty"><div class="e-icon">🎉</div><div class="e-title">No study blocks today</div><div>Enjoy your free time — or add more subjects to get blocks.</div></div>`;
+    return;
+  }
+
+  const s = state.settings;
+  const classMins = getTodayClassMinutes(dateStr);
+  const dinnerStart = toMin(s.wake) + (s.travelTo||0) + classMins + (s.travelHome||0) + REST_AFTER_HOME +
+    Math.floor((toMin(s.bed) - REST_BEFORE_BED - (toMin(s.wake) + (s.travelTo||0) + classMins + (s.travelHome||0) + REST_AFTER_HOME)) / 2);
+  const dinnerEnd = dinnerStart + (s.dinnerDur||30);
+
+  let html = `<div class="block-list">`;
+  let prevEnd = -1;
+  for (let i=0; i<blocks.length; i++) {
+    const blk = blocks[i];
+    const done = !!state.completions[blk.id];
+    // Show break between blocks
+    if (i > 0) {
+      html += `<div class="break-block" aria-label="10-minute break">☕ 10 min break</div>`;
+    }
+    // Show dinner if it falls between prev block and this one
+    if (prevEnd > 0 && blk.startMin >= dinnerStart && prevEnd <= dinnerStart) {
+      html += `<div class="break-block" aria-label="Dinner break">🍽️ Dinner break (~${s.dinnerDur||30} min)</div>`;
+    }
+    prevEnd = blk.endMin;
+    html += `<div class="study-block${done ? " done" : ""}" id="blk-${blk.id}">
+      <input type="checkbox" class="sb-check" id="chk-${blk.id}"
+        ${done ? "checked" : ""} onchange="toggleBlock('${dateStr}','${blk.id}',this.checked)"
+        aria-label="Mark ${esc(blk.subjectName)} as done">
+      <div class="sb-info">
+        <div class="sb-title">${esc(blk.subjectName)}</div>
+        <div class="sb-time">${fromMin(blk.startMin)} – ${fromMin(blk.endMin)} (40 min)${examTag(blk.subjectId, dateStr)}</div>
+      </div>
+    </div>`;
+  }
+  html += `</div>`;
+  contentEl.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  BLOCK COMPLETION
+// ══════════════════════════════════════════════════════════════════════════════
+function toggleBlock(dateStr, blockId, checked) {
+  if (checked) {
+    state.completions[blockId] = true;
+  } else {
+    delete state.completions[blockId];
+  }
+  updateWeeklyHours(dateStr, blockId, checked);
+  // Update DOM without full re-render
+  const blkEl = document.getElementById(`blk-${blockId}`);
+  if (blkEl) blkEl.classList.toggle("done", checked);
+  renderTodayGoal();
+  renderWeeklyGoals();
+  renderLeftoutBanner();
+  saveUserData();
+}
+
+function updateWeeklyHours(dateStr, blockId, done) {
+  // Find the block to get subjectId
+  const blocks = state.plan[dateStr] || [];
+  const blk = blocks.find(b => b.id === blockId);
+  if (!blk || !blk.subjectId) return;
+  const ws = getWeekStart();
+  if (dateStr < ws) return; // older than this week
+  if (!state.weeklyHours[blk.subjectId]) state.weeklyHours[blk.subjectId] = 0;
+  state.weeklyHours[blk.subjectId] += done ? BLOCK_MIN : -BLOCK_MIN;
+  state.weeklyHours[blk.subjectId] = Math.max(0, state.weeklyHours[blk.subjectId]);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  TODAY'S GOAL
+// ══════════════════════════════════════════════════════════════════════════════
+function renderTodayGoal() {
+  const dateStr = today();
+  const blocks  = state.plan[dateStr] || [];
+  const el = $("today-goal-content");
+  if (!blocks.length) {
+    el.innerHTML = `<div class="empty"><div class="e-icon">📋</div><div class="e-title">No blocks planned for today</div><div>Generate a plan to see your daily goal.</div></div>`;
+    return;
+  }
+  const done  = blocks.filter(b => state.completions[b.id]).length;
+  const total = blocks.length;
+  const doneMins = done * BLOCK_MIN;
+  const totalMins= total * BLOCK_MIN;
+  const pct = total ? (done/total*100) : 0;
+  el.innerHTML = `
+    <div class="prog-wrap">
+      <div class="prog-label">
+        <span>${done}/${total} blocks · ${doneMins} / ${totalMins} min</span>
+        <span class="bold">${Math.round(pct)}%</span>
+      </div>
+      <div class="prog-track" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="Today's study progress">
+        <div class="prog-fill ${pct>=100?"ok":pct>=50?"":"warn"}" style="width:${pct}%"></div>
+      </div>
+    </div>
+    <p class="text-sm" style="margin-top:.4rem">${pct>=100 ? "🎉 You've crushed today's goal!" : pct>0 ? `Keep going! ${total-done} block${total-done>1?"s":""} left.` : "Start your first block when you're ready!"}</p>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  WEEKLY GOALS
+// ══════════════════════════════════════════════════════════════════════════════
+function renderWeeklyGoals() {
+  const el = $("weekly-goals-content");
+  if (!state.subjects.length) {
+    el.innerHTML = `<div class="empty"><div class="e-icon">📈</div><div class="e-title">Add subjects to track progress</div></div>`;
+    return;
+  }
+  // Count done minutes from completions in this week
+  const ws = getWeekStart();
+  const doneMins = {};
+  for (const dateStr of Object.keys(state.plan)) {
+    if (dateStr < ws) continue;
+    for (const blk of (state.plan[dateStr] || [])) {
+      if (blk.subjectId && state.completions[blk.id]) {
+        doneMins[blk.subjectId] = (doneMins[blk.subjectId]||0) + BLOCK_MIN;
+      }
+    }
+  }
+
+  el.innerHTML = state.subjects.map(s => {
+    const goalMins = s.goal * 60;
+    const done2 = doneMins[s.id] || 0;
+    const pct = goalMins ? Math.min(100, done2/goalMins*100) : 0;
+    const doneH = (done2/60).toFixed(1);
+    const goalH = s.goal;
+    return `<div class="prog-wrap" style="margin-bottom:.7rem">
+      <div class="prog-label">
+        <span>${esc(s.name)}</span>
+        <span>${doneH}h / ${goalH}h</span>
+      </div>
+      <div class="prog-track" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(s.name)} weekly progress">
+        <div class="prog-fill ${pct>=100?"ok":""}" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  LEFT OUT BANNER
+// ══════════════════════════════════════════════════════════════════════════════
+function renderLeftoutBanner() {
+  const el = $("leftout-banner");
+  const ws = getWeekStart();
+  const missed = {};
+  for (const dateStr of Object.keys(state.plan)) {
+    if (dateStr < ws || dateStr > today()) continue;
+    for (const blk of (state.plan[dateStr] || [])) {
+      if (blk.subjectId && !state.completions[blk.id]) {
+        missed[blk.subjectId] = (missed[blk.subjectId]||0) + BLOCK_MIN;
+      }
+    }
+  }
+  const entries = Object.entries(missed).filter(([,m]) => m > 0);
+  if (!entries.length) { el.innerHTML = ""; return; }
+  const items = entries.map(([id, mins]) => {
+    const sub = state.subjects.find(s => s.id === id);
+    if (!sub) return null;
+    return `${esc(sub.name)}: ${mins} min missed`;
+  }).filter(Boolean);
+
+  el.innerHTML = `<div class="banner leftout" role="alert">
+    <span class="banner-icon">⚠️</span>
+    <div>
+      <strong>Study sessions missed this week:</strong><br>
+      ${items.join(" · ")}
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  BROWSER REMINDER
+// ══════════════════════════════════════════════════════════════════════════════
+function scheduleReminderIfEnabled() {
+  if (_reminderTimer) { clearTimeout(_reminderTimer); _reminderTimer = null; }
+  if (!state.settings.reminder) return;
+  if (!("Notification" in window)) return;
+  const now = new Date();
+  const reminderHour = 19; // 7 PM
+  const target = new Date(now);
+  target.setHours(reminderHour, 0, 0, 0);
+  if (target <= now) target.setDate(target.getDate() + 1);
+  const delay = target - now;
+  _reminderTimer = setTimeout(async () => {
+    // Check if blocks remain
+    const dateStr = today();
+    const blocks = state.plan[dateStr] || [];
+    const remaining = blocks.filter(b => !state.completions[b.id]).length;
+    if (remaining > 0) {
+      let perm = Notification.permission;
+      if (perm === "default") perm = await Notification.requestPermission();
+      if (perm === "granted") {
+        new Notification("⏳ Leftover Time Planner", {
+          body: `You still have ${remaining} study block${remaining>1?"s":""} to go today. Keep it up!`,
+          icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏳</text></svg>"
+        });
+      }
+    }
+    scheduleReminderIfEnabled(); // reschedule for next day
+  }, delay);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+//  TIMETABLE FILE IMPORT  (PDF text extraction + OCR for JPG/PNG/scanned PDFs)
+//  Everything runs in the browser — the uploaded file never leaves the device.
+// ══════════════════════════════════════════════════════════════════════════════
+const TT_PDFJS   = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+const TT_PDFWORK = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const TT_OCRJS   = "https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js";
+const TT_DAYS    = ["Mon","Tue","Wed","Thu","Fri","Sat"];
+const TT_DAY_RE  = /^(mon(day)?|tue(s|sday)?|wed(nesday)?|thu(r|rs|rsday)?|fri(day)?|sat(urday)?)\.?:?$/i;
+const TT_AP      = "(a\\.?\\s?m\\.?|p\\.?\\s?m\\.?)";
+const TT_RANGE   = "(\\d{1,2})(?:\\s*[:.]\\s*(\\d{2}))?\\s*" + TT_AP + "?\\s*(?:-|–|—|to|till|until)\\s*(\\d{1,2})(?:\\s*[:.]\\s*(\\d{2}))?\\s*" + TT_AP + "?";
+const TT_RANGE_FULL = new RegExp("^\\s*" + TT_RANGE + "\\s*$", "i");
+const TT_RANGE_ANY  = new RegExp(TT_RANGE, "i");
+const TT_SINGLE  = new RegExp("^\\s*(\\d{1,2})\\s*[:.]\\s*(\\d{2})\\s*" + TT_AP + "?\\s*$", "i");
+const TT_SKIP_RE = /^(break|lunch|lunch break|recess|interval|tea break|tea|snacks|short break|free|free period|nil|[-–—_.\s]*)$/i;
+const _ttLoaded = {};
+let _ttRows = [];
+
+function ttLoadScript(src) {
+  if (_ttLoaded[src]) return _ttLoaded[src];
+  return (_ttLoaded[src] = new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = res;
+    s.onerror = () => { delete _ttLoaded[src]; rej(new Error("Couldn't load the file reader. Check your internet connection and try again.")); };
+    document.head.appendChild(s);
+  }));
+}
+let _ttUI = { s: "tt-status", b: "tt-bar" };       // which status line/progress bar to drive
+function ttStatus(msg, kind, pct) {
+  const el = $(_ttUI.s), bar = $(_ttUI.b);
+  el.textContent = msg || ""; el.classList.toggle("error", kind === "error");
+  if (typeof pct === "number") { bar.classList.remove("hidden"); bar.firstElementChild.style.width = Math.max(0, Math.min(100, pct)) + "%"; }
+  else bar.classList.add("hidden");
+}
+
+// ── Step 1: get positioned text tokens from the file ─────────────────────────
+async function ttPdfTokens(file) {
+  await ttLoadScript(TT_PDFJS);
+  const pdfjs = window.pdfjsLib;
+  try {
+    const code = await (await fetch(TT_PDFWORK)).text();
+    pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
+  } catch (_) { pdfjs.GlobalWorkerOptions.workerSrc = TT_PDFWORK; }
+  const pdf  = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+  const page = await pdf.getPage(1);
+  const vp   = page.getViewport({ scale: 1 });
+  const tc   = await page.getTextContent();
+  const toks = [];
+  for (const it of tc.items) {
+    const t = (it.str || "").trim(); if (!t) continue;
+    const h  = Math.abs(it.transform[3]) || it.height || 10;
+    const x0 = it.transform[4], base = vp.height - it.transform[5];
+    toks.push({ t, x0, x1: x0 + (it.width || h * t.length * .5), y0: base - h, y1: base });
+  }
+  if (toks.length >= 8) return toks;
+  // No real text layer → it's a scanned PDF. Render the page and OCR it.
+  ttStatus("Scanned PDF detected — reading text from the page…", "", 8);
+  const vp2 = page.getViewport({ scale: 2.5 });
+  const c = document.createElement("canvas"); c.width = vp2.width; c.height = vp2.height;
+  const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+  await page.render({ canvasContext: ctx, viewport: vp2 }).promise;
+  return ttOcrTokens(c);
+}
+
+function ttPrepImage(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      let k = 1;
+      if (img.width < 2400) k = Math.min(3, 2400 / img.width); else if (img.width > 3600) k = 3600 / img.width;
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      const d = ctx.getImageData(0, 0, c.width, c.height), p = d.data;       // grayscale + contrast boost
+      for (let i = 0; i < p.length; i += 4) {
+        let g = .299 * p[i] + .587 * p[i + 1] + .114 * p[i + 2];
+        g = (g - 128) * 1.3 + 128; g = g < 0 ? 0 : g > 255 ? 255 : g;
+        p[i] = p[i + 1] = p[i + 2] = g;
+      }
+      ctx.putImageData(d, 0, 0); URL.revokeObjectURL(url); res(c);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Couldn't open this image.")); };
+    img.src = url;
+  });
+}
+
+async function ttOcrTokens(source) {
+  await ttLoadScript(TT_OCRJS);
+  const res = await Tesseract.recognize(source, "eng", {
+    logger: m => {
+      if (m.status === "recognizing text") ttStatus("Reading text… " + Math.round(m.progress * 100) + "%", "", 12 + m.progress * 83);
+      else ttStatus("Preparing the text reader (first time only)…", "", 6);
+    }
+  });
+  let words = res.data.words;
+  if (!words || !words.length) {           // newer builds only return blocks
+    words = [];
+    (res.data.blocks || []).forEach(b => (b.paragraphs || []).forEach(p => (p.lines || []).forEach(l => (l.words || []).forEach(w => words.push(w)))));
+  }
+  return words.filter(w => w.text && w.text.trim() && (w.confidence == null || w.confidence > 30))
+    .map(w => ({ t: w.text.trim(), x0: w.bbox.x0, x1: w.bbox.x1, y0: w.bbox.y0, y1: w.bbox.y1 }));
+}
+
+// ── Step 2: tokens → segments (one segment ≈ one table cell's line of text) ──
+function ttMedianH(tokens) {
+  const hs = tokens.map(t => t.y1 - t.y0).filter(h => h > 0).sort((a, b) => a - b);
+  return hs[Math.floor(hs.length / 2)] || 10;
+}
+function ttBuildSegments(tokensIn, mh) {
+  const tokens = tokensIn
+    .map(t => ({ ...t, t: t.t.replace(/^[|\[\]{}\\\/=_]+|[|\[\]{}\\\/=_]+$/g, "").trim() }))
+    .filter(t => t.t);
+  const sorted = [...tokens].sort((a, b) => (a.y0 + a.y1) - (b.y0 + b.y1));
+  const lines = [];
+  for (const t of sorted) {
+    const cy = (t.y0 + t.y1) / 2;
+    let L = null;
+    for (const l of lines) if (Math.abs(l.cy - cy) < mh * .55) { L = l; break; }
+    if (!L) { L = { cy, toks: [] }; lines.push(L); }
+    L.toks.push(t); L.cy = L.toks.reduce((s, x) => s + (x.y0 + x.y1) / 2, 0) / L.toks.length;
+  }
+  lines.sort((a, b) => a.cy - b.cy);
+  const segs = [];
+  lines.forEach((L, li) => {
+    L.toks.sort((a, b) => a.x0 - b.x0);
+    let cur = null;
+    for (const t of L.toks) {
+      if (cur && t.x0 - cur.x1 <= mh * .9) { cur.t += " " + t.t; cur.x1 = Math.max(cur.x1, t.x1); cur.y0 = Math.min(cur.y0, t.y0); cur.y1 = Math.max(cur.y1, t.y1); }
+      else { if (cur) segs.push(cur); cur = { t: t.t, x0: t.x0, x1: t.x1, y0: t.y0, y1: t.y1, line: li }; }
+    }
+    if (cur) segs.push(cur);
+  });
+  segs.forEach(s => { s.cx = (s.x0 + s.x1) / 2; s.cy = (s.y0 + s.y1) / 2; });
+  return segs;
+}
+
+// A time like "9:00 - 10:00" is sometimes stacked over 2–3 lines inside one cell.
+function ttMergeTimeFragments(segs, mh) {
+  const partial = /^(\d{1,2}([:.]\d{2})?\s*(a\.?m\.?|p\.?m\.?)?\s*(-|–|—|to)?|(-|–|—|to)\s*\d{1,2}([:.]\d{2})?\s*(a\.?m\.?|p\.?m\.?)?)$/i;
+  const used = new Set(), out = [];
+  const order = [...segs].sort((a, b) => a.cy - b.cy);
+  for (const a of order) {
+    if (used.has(a)) continue;
+    if (partial.test(a.t.trim()) && !TT_RANGE_FULL.test(a.t)) {
+      const near = order.filter(b => b !== a && !used.has(b) && b.cy > a.cy && b.cy - a.cy < mh * 3.5 &&
+        Math.abs(b.cx - a.cx) < Math.max(a.x1 - a.x0, b.x1 - b.x0, mh * 4) * .8 && partial.test(b.t.trim()));
+      for (const n of [2, 1]) {
+        if (near.length < n) continue;
+        const group = [a, ...near.slice(0, n)], text = group.map(g => g.t).join(" ");
+        if (TT_RANGE_FULL.test(text) && ttParseRange(text)) {
+          const m = { t: text, x0: Math.min(...group.map(g => g.x0)), x1: Math.max(...group.map(g => g.x1)),
+                      y0: Math.min(...group.map(g => g.y0)), y1: Math.max(...group.map(g => g.y1)), line: a.line };
+          m.cx = (m.x0 + m.x1) / 2; m.cy = (m.y0 + m.y1) / 2;
+          group.forEach(g => used.add(g)); out.push(m); break;
+        }
+      }
+      if (used.has(a)) continue;
+    }
+    out.push(a);
+  }
+  return out;
+}
+
+// ── Step 3: time parsing ─────────────────────────────────────────────────────
+function ttApNorm(s) { return s ? (s.toLowerCase().indexOf("p") === 0 ? "pm" : "am") : null; }
+function ttH24(h, ap) {
+  if (ap === "pm") return h < 12 ? h + 12 : h;
+  if (ap === "am") return h === 12 ? 0 : h;
+  if (h >= 13) return h;
+  if (h === 12) return 12;
+  return h < 7 ? h + 12 : h;            // 1–6 → afternoon, 7–11 → morning
+}
+function ttHHMM(min) { return pad2(Math.floor(min / 60)) + ":" + pad2(min % 60); }
+function ttParseRange(text) {
+  const m = String(text).match(TT_RANGE_FULL) || String(text).match(TT_RANGE_ANY);
+  if (!m) return null;
+  const h1 = +m[1], m1 = +(m[2] || 0), a1 = ttApNorm(m[3]), h2 = +m[4], m2 = +(m[5] || 0), a2 = ttApNorm(m[6]);
+  if (h1 > 23 || h2 > 23 || m1 > 59 || m2 > 59) return null;
+  let e = ttH24(h2, a2) * 60 + m2;
+  let s = ttH24(h1, a1 || a2) * 60 + m1;
+  if (!a1 && a2 && s >= e) s = ttH24(h1, a2 === "pm" ? "am" : "pm") * 60 + m1;
+  if (e <= s && !a2 && e + 720 < 1440) e += 720;
+  if (e <= s || e - s > 480 || s < 300 || s > 1320) return null;
+  return { start: ttHHMM(s), end: ttHHMM(e) };
+}
+function ttParseSingle(text) {
+  const m = String(text).match(TT_SINGLE); if (!m) return null;
+  const h = +m[1], mi = +m[2]; if (h > 23 || mi > 59) return null;
+  const min = ttH24(h, ttApNorm(m[3])) * 60 + mi;
+  return (min >= 300 && min <= 1320) ? min : null;
+}
+
+// ── Step 4a: grid layout (days down the side or across the top) ─────────────
+// Room / period labels that are NOT subjects: "Room 204", "LH-3", "A-204", "204", "Period 2"…
+const TT_ROOM_WORD = "(?:room|rm|r\\.?\\s?no|class\\s?room|classroom|cr|lh|lt|hall|seminar\\s?hall|block|bldg|building|floor|venue)";
+const TT_ROOM_INLINE = new RegExp("[\\(\\[,]?\\s*\\b" + TT_ROOM_WORD + "\\b[\\s.:#-]*(?:no\\.?)?\\s*[A-Za-z]?[-]?\\d[\\w-]*\\s*[\\)\\]]?", "gi");
+const TT_ROOM_LINE = new RegExp("^" + TT_ROOM_WORD + "\\b[\\s.:#-]*(?:no\\.?)?\\s*[\\w-]*$", "i");
+function ttIsNoise(s) {
+  const t = String(s).trim();
+  if (!/[A-Za-z]/.test(t)) return true;                                   // only digits/symbols
+  if (TT_ROOM_LINE.test(t) && /\d/.test(t)) return true;                  // "Room 204", "LH-3"
+  if (/^(period|prd|hour|hr|slot|p)\s?[-.#]?\s?\d{1,2}$/i.test(t)) return true;   // "Period 2", "P3"
+  if (/^[A-Za-z]-?\d{1,4}[A-Za-z]?$/.test(t)) return true;                // "A204", "B-12"
+  if (/^\d{1,4}[A-Za-z]?$/.test(t)) return true;                          // "204", "12B"
+  return false;
+}
+function ttStripRoom(s) { return s.replace(TT_ROOM_INLINE, " ").replace(/\s+/g, " ").trim(); }
+function ttCleanSubject(lines) {
+  lines = lines.map(ttStripRoom).filter(s => !ttIsNoise(s));
+  const ok = lines.map(s => s.replace(/\s+/g, " ").replace(/^[-–—:,.\s]+|[-–—:,.\s]+$/g, "")).filter(Boolean);
+  const pick = ok.find(s => !/^(dr|prof|mr|mrs|ms)\b\.?/i.test(s)) || ok[0] || "";
+  return pick;
+}
+function ttCluster(items, key, tol) {            // biggest group of items sharing roughly the same coordinate
+  let best = [];
+  for (const a of items) {
+    const g = items.filter(b => Math.abs(key(b) - key(a)) <= tol);
+    if (g.length > best.length) best = g;
+  }
+  return best;
+}
+function ttParseGrid(segs, mh) {
+  const normDay = t => TT_DAYS.find(d => d.toLowerCase() === t.trim().toLowerCase().slice(0, 3));
+  let days = segs.filter(s => TT_DAY_RE.test(s.t.trim()));
+  if (days.length < 2) return null;
+  const spread = a => Math.max(...a) - Math.min(...a);
+  const rows = spread(days.map(d => d.cx)) <= spread(days.map(d => d.cy));   // true → days listed down the left side
+  const P  = s => rows ? s.cy : s.cx;       // position along the day axis
+  const Q  = s => rows ? s.cx : s.cy;       // position along the time axis
+  const Q0 = s => rows ? s.x0 : s.y0, Q1 = s => rows ? s.x1 : s.y1;
+  const pageW = Math.max(...segs.map(s => s.x1));
+  const crossTol = rows ? pageW * .06 + mh * 2 : mh * 1.5;
+  const crossOf = s => rows ? s.cx : s.cy;
+  const medCross = days.map(crossOf).sort((a, b) => a - b)[Math.floor(days.length / 2)];
+  days = days.filter(d => Math.abs(crossOf(d) - medCross) <= crossTol);
+  const seen = new Set();
+  days = days.sort((a, b) => P(a) - P(b)).filter(d => { const k = normDay(d.t); if (seen.has(k)) return false; seen.add(k); return true; });
+  if (days.length < 2) return null;
+
+  // time headers
+  const dayLabelSet = new Set(days);
+  let heads = [];
+  const ranged = segs.filter(s => !dayLabelSet.has(s) && TT_RANGE_FULL.test(s.t) && ttParseRange(s.t));
+  if (ranged.length >= 2) {
+    const g = rows ? ttCluster(ranged, s => s.cy, mh * 1.4) : ttCluster(ranged, s => s.cx, pageW * .05 + mh);
+    heads = g.map(s => ({ seg: s, ...ttParseRange(s.t) }));
+  } else {
+    const singles = segs.filter(s => !dayLabelSet.has(s) && ttParseSingle(s.t) != null);
+    const g = rows ? ttCluster(singles, s => s.cy, mh * 1.4) : ttCluster(singles, s => s.cx, pageW * .05 + mh);
+    if (g.length >= 3) {
+      const sorted = g.sort((a, b) => Q(a) - Q(b));
+      heads = sorted.map((s, i) => {
+        const st = ttParseSingle(s.t), en = i < sorted.length - 1 ? ttParseSingle(sorted[i + 1].t) : st + 60;
+        return { seg: s, start: ttHHMM(st), end: ttHHMM(Math.min(en, 1439)) };
+      }).filter(h => toMin(h.end) > toMin(h.start));
+    }
+  }
+  if (heads.length < 2) return null;
+  heads.sort((a, b) => Q(a.seg) - Q(b.seg));
+  const headSet = new Set(heads.map(h => h.seg));
+
+  // row/column bands
+  const mids = arr => arr.map((v, i) => {
+    const lo = i === 0 ? v - (arr[1] - v) / 2 : (arr[i - 1] + v) / 2;
+    const hi = i === arr.length - 1 ? v + (v - arr[i - 1]) / 2 : (v + arr[i + 1]) / 2;
+    return [lo, hi];
+  });
+  const dayBands = mids(days.map(P));
+  const dayEnd = Math.max(...days.map(Q1));
+  const cells = {};
+  for (const s of segs) {
+    if (dayLabelSet.has(s) || headSet.has(s)) continue;
+    if (Q(s) <= dayEnd) continue;
+    const di = dayBands.findIndex(([lo, hi]) => P(s) >= lo && P(s) < hi);
+    if (di < 0) continue;
+    // which time columns does this text sit in (or span)?
+    let cols = heads.map((h, i) => i).filter(i => Q(heads[i].seg) >= Q0(s) && Q(heads[i].seg) <= Q1(s));
+    if (!cols.length) {
+      let bi = 0, bd = Infinity;
+      heads.forEach((h, i) => { const d = Math.abs(Q(h.seg) - Q(s)); if (d < bd) { bd = d; bi = i; } });
+      cols = [bi];
+    }
+    const k = di + "|" + cols[0];
+    (cells[k] = cells[k] || { di, c0: cols[0], c1: cols[cols.length - 1], parts: [] });
+    const cell = cells[k]; cell.c1 = Math.max(cell.c1, cols[cols.length - 1]); cell.parts.push(s);
+  }
+  const out = [];
+  for (const cell of Object.values(cells)) {
+    cell.parts.sort((a, b) => a.cy - b.cy || a.cx - b.cx);
+    const subject = ttCleanSubject(cell.parts.map(p => p.t));
+    if (!/[A-Za-z]/.test(subject) || subject.length < 2 || TT_SKIP_RE.test(subject)) continue;
+    out.push({ day: normDay(days[cell.di].t), subject, start: heads[cell.c0].start, end: heads[cell.c1].end });
+  }
+  return ttMergeAdjacent(out);
+}
+function ttMergeAdjacent(rows) {
+  rows.sort((a, b) => TT_DAYS.indexOf(a.day) - TT_DAYS.indexOf(b.day) || toMin(a.start) - toMin(b.start));
+  const out = [];
+  for (const r of rows) {
+    const p = out[out.length - 1];
+    if (p && p.day === r.day && p.subject.toLowerCase() === r.subject.toLowerCase() && toMin(r.start) - toMin(p.end) <= 10) p.end = r.end;
+    else out.push({ ...r });
+  }
+  return out;
+}
+
+// ── Step 4b: list layout ("Monday" heading, then "9:00-10:00 Maths" lines) ───
+function ttParseLines(segs) {
+  const byLine = {};
+  segs.forEach(s => (byLine[s.line] = byLine[s.line] || []).push(s));
+  const out = []; let cur = null;
+  for (const k of Object.keys(byLine).map(Number).sort((a, b) => a - b)) {
+    const parts = byLine[k].sort((a, b) => a.x0 - b.x0);
+    const dayPart = parts.find(p => TT_DAY_RE.test(p.t.trim()));
+    if (dayPart) cur = TT_DAYS.find(d => d.toLowerCase() === dayPart.t.trim().toLowerCase().slice(0, 3));
+    const text = parts.filter(p => p !== dayPart).map(p => p.t).join(" | ");
+    const m = text.match(TT_RANGE_ANY);
+    if (!cur || !m) continue;
+    const tr = ttParseRange(m[0]); if (!tr) continue;
+    const rest = (text.slice(m.index + m[0].length) || text.slice(0, m.index)).split("|").map(x => x.trim()).filter(Boolean);
+    const subject = ttCleanSubject(rest);
+    if (!/[A-Za-z]/.test(subject) || TT_SKIP_RE.test(subject)) continue;
+    out.push({ day: cur, subject, start: tr.start, end: tr.end });
+  }
+  return ttMergeAdjacent(out);
+}
+
+function ttExtractRows(tokens) {
+  if (!tokens.length) return [];
+  const mh = ttMedianH(tokens);
+  const segs = ttMergeTimeFragments(ttBuildSegments(tokens, mh), mh);
+  let rows = null;
+  try { rows = ttParseGrid(segs, mh); } catch (e) { console.warn("grid parse failed", e); }
+  if (!rows || rows.length < 2) {
+    const alt = ttParseLines(segs);
+    if (alt.length > (rows ? rows.length : 0)) rows = alt;
+  }
+  return rows || [];
+}
+
+// ── Step 5: file handling + review dialog ───────────────────────────────────
+async function handleTimetableFile(file) {
+  if (!file) return;
+  const isPdf = /\.pdf$/i.test(file.name) || file.type === "application/pdf";
+  const isImg = /^image\//.test(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
+  if (!isPdf && !isImg) { ttStatus("Please choose a PDF or an image (JPG, PNG).", "error"); return; }
+  if (file.size > 20 * 1024 * 1024) { ttStatus("That file is too large (max 20 MB).", "error"); return; }
+  try {
+    ttStatus("Opening " + file.name + "…", "", 4);
+    const tokens = isPdf ? await ttPdfTokens(file) : await ttOcrTokens(await ttPrepImage(file));
+    ttStatus("Finding classes…", "", 97);
+    const rows = ttExtractRows(tokens);
+    if (!rows.length) {
+      ttStatus("Couldn't find any classes in this file. A straight-on, well-lit photo or a PDF with selectable text works best — or add classes manually below.", "error");
+      return;
+    }
+    ttStatus("Found " + rows.length + " classes — please review them.", "");
+    ttOpen(rows);
+  } catch (err) {
+    console.error(err);
+    ttStatus((err && err.message) || "Something went wrong while reading the file.", "error");
+  }
+}
+
+function toggleTimetableUpload(force) {
+  const panel = $("tt-panel"), btn = $("tt-toggle");
+  const open = typeof force === "boolean" ? force : panel.classList.contains("hidden");
+  panel.classList.toggle("hidden", !open);
+  btn.setAttribute("aria-expanded", open);
+  btn.textContent = open ? "✕ Hide import" : "📤 Import timetable from PDF / image";
+}
+
+function ttOpen(rows) {
+  _ttRows = rows.map(r => ({ ...r }));
+  $("tt-replace").checked = false; hideErr("tt-err");
+  ttRender(); $("tt-modal").classList.remove("hidden");
+}
+function ttClose() { $("tt-modal").classList.add("hidden"); ttStatus("", ""); }
+function ttRender() {
+  const names = state.subjects.map(s => `<option value="${esc(s.name)}">`).join("");
+  $("tt-rows").innerHTML =
+    `<datalist id="tt-subj-list">${names}</datalist>` +
+    `<div class="tt-row tt-hdr"><span>Day</span><span>Subject</span><span>Start</span><span>End</span><span></span></div>` +
+    _ttRows.map((r, i) => `<div class="tt-row">
+      <select aria-label="Day" onchange="ttSet(${i},'day',this.value)">${TT_DAYS.map(d => `<option value="${d}"${d === r.day ? " selected" : ""}>${d}</option>`).join("")}</select>
+      <input type="text" list="tt-subj-list" value="${esc(r.subject)}" aria-label="Subject" oninput="ttSet(${i},'subject',this.value)">
+      <input type="time" value="${esc(r.start)}" aria-label="Start time" onchange="ttSet(${i},'start',this.value)">
+      <input type="time" value="${esc(r.end)}" aria-label="End time" onchange="ttSet(${i},'end',this.value)">
+      <button type="button" class="btn btn-danger btn-sm btn-icon" onclick="ttDel(${i})" aria-label="Remove row">✕</button>
+    </div>`).join("");
+}
+function ttSet(i, k, v) { _ttRows[i][k] = v; }
+function ttDel(i) { _ttRows.splice(i, 1); ttRender(); }
+function ttAddRow() { _ttRows.push({ day: "Mon", subject: "", start: "09:00", end: "10:00" }); ttRender(); }
+
+function ttImport() {
+  if (!_ttRows.length) { showErr("tt-err", "There's nothing to import."); return; }
+  for (let i = 0; i < _ttRows.length; i++) {
+    const r = _ttRows[i];
+    if (!r.subject.trim()) { showErr("tt-err", `Row ${i + 1}: subject name is empty.`); return; }
+    if (!r.start || !r.end) { showErr("tt-err", `Row ${i + 1}: set both start and end time.`); return; }
+    if (toMin(r.end) <= toMin(r.start)) { showErr("tt-err", `Row ${i + 1}: end time must be after start time.`); return; }
+  }
+  hideErr("tt-err");
+  const replacedSubjIds = $("tt-replace").checked ? state.classes.map(c => c.subjectId) : [];
+  if ($("tt-replace").checked) state.classes = [];
+  let newSubj = 0, added = 0;
+  for (const r of _ttRows) {
+    const name = ttStripRoom(r.subject.trim()).replace(/\s+/g, " ");
+    if (!name || ttIsNoise(name)) continue;          // never turn a room number into a subject
+    const code = extractCode(name);
+    let sub = findDuplicateSubject(name, code);     // same name or code → reuse, never duplicate
+    if (!sub) { sub = { id: uid(), name, code, strength: "average", goal: 3, examDate: null, pending: true, locked: false }; state.subjects.push(sub); newSubj++; }
+    if (state.classes.some(c => c.day === r.day && c.subjectId === sub.id && c.start === r.start && c.end === r.end)) continue;
+    state.classes.push({ id: uid(), day: r.day, subjectId: sub.id, start: r.start, end: r.end }); added++;
+  }
+  if (replacedSubjIds.length) pruneOrphanSubjects(replacedSubjIds);   // old subjects not in the new timetable
+  buildSubjectDropdown(); renderSubjects(); renderClasses(); regeneratePlan(); saveUserData();
+  $("tt-modal").classList.add("hidden"); toggleTimetableUpload(false);
+  ttStatus(`✅ Imported ${added} class${added === 1 ? "" : "es"}` + (newSubj ? ` and added ${newSubj} new subject${newSubj === 1 ? "" : "s"} — set their strength, weekly goal and exam date under Subjects, then press Save.` : "."), "");
+  if (newSubj) { const sl = $("subj-list"); if (sl) sl.scrollIntoView({ behavior: "smooth", block: "center" }); }
+}
+
+(function ttInit() {
+  const z = $("tt-drop");
+  ["dragenter", "dragover"].forEach(ev => z.addEventListener(ev, e => { e.preventDefault(); z.classList.add("drag"); }));
+  ["dragleave", "drop"].forEach(ev => z.addEventListener(ev, e => { e.preventDefault(); z.classList.remove("drag"); }));
+  z.addEventListener("drop", e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) handleTimetableFile(f); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("tt-modal").classList.contains("hidden")) ttClose(); });
+})();
+
+function toggleExamUpload(force) {
+  const panel = $("ex-panel"), btn = $("ex-toggle");
+  const open = typeof force === "boolean" ? force : panel.classList.contains("hidden");
+  panel.classList.toggle("hidden", !open);
+  btn.setAttribute("aria-expanded", open);
+  btn.textContent = open ? "✕ Hide import" : "📝 Import exam timetable (PDF / image)";
+}
+(function exInit() {
+  const z = $("ex-drop");
+  ["dragenter", "dragover"].forEach(ev => z.addEventListener(ev, e => { e.preventDefault(); z.classList.add("drag"); }));
+  ["dragleave", "drop"].forEach(ev => z.addEventListener(ev, e => { e.preventDefault(); z.classList.remove("drag"); }));
+  z.addEventListener("drop", e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) { handleExamFile(f); toggleExamUpload(false); } });
+})();
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  EXAM TIMETABLE IMPORT — reads dates + subject names, sets each subject's exam date
+// ══════════════════════════════════════════════════════════════════════════════
+const EX_MON = "jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec";
+const EX_D1 = /(\d{1,2})\s*[\/\-.]\s*(\d{1,2})\s*[\/\-.]\s*(\d{2,4})/;
+const EX_D2 = new RegExp("(\\d{1,2})(?:st|nd|rd|th)?[\\s\\-]+(" + EX_MON + ")[a-z]*[\\s,.\\-]*(\\d{2,4})?", "i");
+const EX_D3 = new RegExp("\\b(" + EX_MON + ")[a-z]*\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s*(\\d{2,4})?", "i");
+let _exRows = [];
+
+function exIso(y, m, d) {
+  if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+  if (y < 100) y += 2000;
+  if (!y) { y = new Date().getFullYear(); }
+  return `${y}-${pad2(m)}-${pad2(d)}`;
+}
+function exFindDate(text) {                         // returns { iso, match } or null (day/month/year, Indian order)
+  let m = text.match(EX_D1);
+  if (m) { const iso = exIso(+m[3], +m[2], +m[1]); if (iso) return { iso, match: m[0] }; }
+  const mi = s => EX_MON.split("|").indexOf(s.toLowerCase().slice(0, 4) === "sept" ? "sept" : s.toLowerCase().slice(0, 3)) ;
+  m = text.match(EX_D2);
+  if (m) { const mo = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"].indexOf(m[2].toLowerCase().slice(0,3)) + 1;
+    const iso = exIso(m[3] ? +m[3] : 0, mo, +m[1]); if (iso) return { iso: exYearFix(iso, !m[3]), match: m[0] }; }
+  m = text.match(EX_D3);
+  if (m) { const mo = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"].indexOf(m[1].toLowerCase().slice(0,3)) + 1;
+    const iso = exIso(m[3] ? +m[3] : 0, mo, +m[2]); if (iso) return { iso: exYearFix(iso, !m[3]), match: m[0] }; }
+  return null;
+}
+function exYearFix(iso, noYear) {                   // no year printed and date is long past → next year
+  if (!noYear) return iso;
+  const d = new Date(iso + "T00:00:00"), now = new Date();
+  if (now - d > 60 * 86400000) d.setFullYear(d.getFullYear() + 1);
+  return d.toISOString().slice(0, 10);
+}
+function exMatchSubject(text) {                     // best existing subject mentioned in this line
+  const t = normName(text), c = normCode(text);
+  let best = null, bl = 0;
+  for (const s of state.subjects) {
+    const n = normName(s.name);
+    if (n && n.length >= 3 && t.includes(n) && n.length > bl) { best = s; bl = n.length; }
+    const k = normCode(s.code || "");
+    if (k && k.length >= 4 && c.includes(k) && k.length + 100 > bl) { best = s; bl = k.length + 100; }
+  }
+  return best;
+}
+
+async function handleExamFile(file) {
+  if (!file) return;
+  const isPdf = /\.pdf$/i.test(file.name) || file.type === "application/pdf";
+  const isImg = /^image\//.test(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
+  _ttUI = { s: "ex-status", b: "ex-bar" };
+  try {
+    if (!isPdf && !isImg) { ttStatus("Please choose a PDF or an image (JPG, PNG).", "error"); return; }
+    if (file.size > 20 * 1024 * 1024) { ttStatus("That file is too large (max 20 MB).", "error"); return; }
+    if (!state.subjects.length) { ttStatus("Add your subjects (or import your class timetable) first, so exam dates can be matched to them.", "error"); return; }
+    ttStatus("Opening " + file.name + "…", "", 4);
+    const tokens = isPdf ? await ttPdfTokens(file) : await ttOcrTokens(await ttPrepImage(file));
+    ttStatus("Finding exam dates…", "", 97);
+    const mh = ttMedianH(tokens);
+    const segs = ttBuildSegments(tokens, mh);
+    const byLine = {};
+    segs.forEach(s => (byLine[s.line] = byLine[s.line] || []).push(s));
+    const rows = [];
+    for (const k of Object.keys(byLine).map(Number).sort((a, b) => a - b)) {
+      const text = byLine[k].sort((a, b) => a.x0 - b.x0).map(p => p.t).join(" | ");
+      const dt = exFindDate(text); if (!dt) continue;
+      const rest = text.replace(dt.match, " | ").replace(TT_RANGE_ANY, " ");
+      const sub = exMatchSubject(rest);
+      const label = rest.split("|").map(x => x.trim()).filter(x => /[A-Za-z]{3}/.test(x) && !/^(mon|tue|wed|thu|fri|sat|sun)[a-z]*$/i.test(x)).join(" · ");
+      rows.push({ date: dt.iso, text: label, subjectId: sub ? sub.id : "" });
+    }
+    if (!rows.length) { ttStatus("Couldn't find any exam dates in this file. A clear PDF with selectable text works best — or set exam dates manually.", "error"); return; }
+    ttStatus("Found " + rows.length + " exam row" + (rows.length > 1 ? "s" : "") + " — please review.", "");
+    _exRows = rows; exRender(); hideErr("ex-err"); $("ex-modal").classList.remove("hidden");
+  } catch (err) {
+    console.error(err);
+    ttStatus((err && err.message) || "Something went wrong while reading the file.", "error");
+  } finally { _ttUI = { s: "tt-status", b: "tt-bar" }; }
+}
+function exRender() {
+  const opts = sel => `<option value="">— skip —</option>` + state.subjects.map(s => `<option value="${s.id}"${s.id === sel ? " selected" : ""}>${esc(s.name)}</option>`).join("");
+  $("ex-rows").innerHTML =
+    `<div class="ex-row ex-hdr"><span>Date</span><span>Found in file</span><span>Subject</span><span></span></div>` +
+    _exRows.map((r, i) => `<div class="ex-row">
+      <input type="date" value="${esc(r.date)}" aria-label="Exam date" onchange="exSet(${i},'date',this.value)">
+      <span class="ex-txt" title="${esc(r.text)}">${esc(r.text || "—")}</span>
+      <select aria-label="Subject" onchange="exSet(${i},'subjectId',this.value)">${opts(r.subjectId)}</select>
+      <button type="button" class="btn btn-danger btn-sm btn-icon" onclick="exDel(${i})" aria-label="Remove row">✕</button>
+    </div>`).join("");
+}
+function exSet(i, k, v) { _exRows[i][k] = v; }
+function exDel(i) { _exRows.splice(i, 1); exRender(); }
+function exClose() { $("ex-modal").classList.add("hidden"); }
+function exApply() {
+  const use = _exRows.filter(r => r.subjectId && r.date);
+  if (!use.length) { showErr("ex-err", "Pick a subject for at least one row."); return; }
+  const byId = {};                                   // several dates for one subject → keep the earliest
+  use.forEach(r => { if (!byId[r.subjectId] || r.date < byId[r.subjectId]) byId[r.subjectId] = r.date; });
+  Object.entries(byId).forEach(([id, date]) => { const s = state.subjects.find(x => x.id === id); if (s) s.examDate = date; });
+  exClose();
+  renderSubjects();
+  regeneratePlan();                                  // rearranges the study plan around the new exams
+  saveUserData();
+  _ttUI = { s: "ex-status", b: "ex-bar" };
+  ttStatus(`✅ Exam dates set for ${Object.keys(byId).length} subject${Object.keys(byId).length > 1 ? "s" : ""} — study plan rearranged.`, "");
+  _ttUI = { s: "tt-status", b: "tt-bar" };
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("ex-modal").classList.contains("hidden")) exClose(); });
+
+function showErr(id, msg) {
+  const el = $(id); el.textContent = msg; el.classList.remove("hidden");
+}
+function hideErr(id) { const el = $(id); el.classList.add("hidden"); }
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  INIT (Firebase not ready yet — wait for auth state)
+//  The loading overlay hides when _onLogin or _onLogout fires.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Fallback: if Firebase module fails to load, show auth page after 4s
+setTimeout(() => {
+  if (!window._firebase) {
+    console.warn("Firebase not loaded — using localStorage-only mode");
+    // Show app in offline/local mode using localStorage
+    $("loading-overlay").classList.add("hidden");
+    $("auth-page").classList.add("hidden");
+    $("app-page").classList.remove("hidden");
+    $("user-email-label").textContent = "Local mode";
+    const ls = localStorage.getItem("ltp-state");
+    if (ls) { try { Object.assign(state, JSON.parse(ls)); } catch(_){} }
+    applySettingsToUI();
+    buildSubjectDropdown();
+    renderAll();
+    scheduleReminderIfEnabled();
+
+    // Patch sign-out for local mode
+    window.doSignOut = () => {
+      localStorage.removeItem("ltp-state");
+      location.reload();
+    };
+  }
+}, 4000);
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  PROFILE MODAL
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** Avatar: stored as a data-URL in localStorage under "ltp-avatar" */
+function loadAvatar() {
+  const av = localStorage.getItem("ltp-avatar");
+  updateAvatarUI(av);
+}
+
+function updateAvatarUI(dataUrl) {
+  const imgModal = $("prof-avatar-img");
+  const emojiModal = $("prof-avatar-emoji-modal");
+  const topBtn = $("topbar-profile-btn");
+  const topEmoji = $("topbar-avatar-emoji");
+  if (dataUrl) {
+    imgModal.src = dataUrl; imgModal.style.display = "block";
+    emojiModal.style.display = "none";
+    // Topbar: show image
+    let topImg = topBtn.querySelector("img");
+    if (!topImg) { topImg = document.createElement("img"); topBtn.appendChild(topImg); }
+    topImg.src = dataUrl; topImg.style.display = "block";
+    topEmoji.style.display = "none";
+  } else {
+    imgModal.style.display = "none"; emojiModal.style.display = "";
+    const topImg = topBtn.querySelector("img");
+    if (topImg) topImg.style.display = "none";
+    topEmoji.style.display = "";
+  }
+}
+
+function handleAvatarUpload(file) {
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { alert("Image too large (max 2 MB). Please choose a smaller photo."); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    // Resize to max 200×200 for storage efficiency
+    const img = new Image();
+    img.onload = () => {
+      const size = 200, c = document.createElement("canvas");
+      c.width = size; c.height = size;
+      const ctx = c.getContext("2d");
+      const scale = Math.min(size / img.width, size / img.height);
+      const w = img.width * scale, h = img.height * scale;
+      ctx.fillStyle = "#070b1c"; ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+      const dataUrl = c.toDataURL("image/jpeg", .85);
+      localStorage.setItem("ltp-avatar", dataUrl);
+      updateAvatarUI(dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/** Compute current streak (consecutive days with at least 1 block completed) */
+function computeStreak() {
+  let streak = 0;
+  const d = new Date(); d.setHours(0,0,0,0);
+  for (let i = 0; i < 365; i++) {
+    const dateStr = d.toISOString().slice(0,10);
+    d.setDate(d.getDate() - 1);
+    const blocks = state.plan[dateStr] || [];
+    if (!blocks.length) { if (i === 0) continue; break; }     // today with no plan doesn't break streak
+    const anyDone = blocks.some(b => state.completions[b.id]);
+    if (!anyDone) { if (i === 0) continue; break; }
+    streak++;
+  }
+  return streak;
+}
+
+/** Weekly stats */
+function weeklyStats() {
+  const ws = getWeekStart();
+  let done = 0;
+  for (const dateStr of Object.keys(state.plan)) {
+    if (dateStr < ws) continue;
+    for (const blk of (state.plan[dateStr] || [])) {
+      if (state.completions[blk.id]) done++;
+    }
+  }
+  const hrs = (done * 40 / 60).toFixed(1);
+  return { done, hrs };
+}
+
+/** Bytes of localStorage used */
+function storageUsed() {
+  let bytes = 0;
+  try {
+    for (const k of Object.keys(localStorage)) {
+      bytes += (localStorage.getItem(k) || "").length * 2;   // UTF-16 ≈ 2 bytes/char
+    }
+  } catch(_) {}
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+}
+
+/** Subject studied most this week */
+function topSubjectThisWeek() {
+  const ws = getWeekStart();
+  const mins = {};
+  for (const dateStr of Object.keys(state.plan)) {
+    if (dateStr < ws) continue;
+    for (const blk of (state.plan[dateStr] || [])) {
+      if (blk.subjectId && state.completions[blk.id]) {
+        mins[blk.subjectId] = (mins[blk.subjectId] || 0) + 40;
+      }
+    }
+  }
+  const best = Object.entries(mins).sort((a,b) => b[1] - a[1])[0];
+  if (!best) return null;
+  const sub = state.subjects.find(s => s.id === best[0]);
+  return sub ? { name: sub.name, mins: best[1] } : null;
+}
+
+/** Format an ISO date string as "26 Nov 2026" */
+function formatDate(isoStr) {
+  if (!isoStr) return "—";
+  const d = new Date(isoStr);
+  return d.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
+}
+
+function openProfileModal() {
+  const user = window._currentUser;
+  const isLocal = !!window._localMode || !user;
+
+  // ── Avatar ──────────────────────────────────────────────────────────
+  loadAvatar();
+
+  // ── Display name ────────────────────────────────────────────────────
+  const displayName = user && user.displayName ? user.displayName : (isLocal ? "Local User" : "—");
+  $("prof-display-name") && ($("prof-display-name").textContent = displayName);  // header
+  // the header .prof-name uses id="prof-modal-title" which also works as the display name label
+  document.querySelector("#profile-modal .prof-name").textContent = displayName;
+  $("prof-edit-name").value = displayName;
+
+  // ── Email + mode badge ───────────────────────────────────────────────
+  const email = user ? user.email : "Local mode — no account";
+  $("prof-modal-email").textContent = email;
+  $("prof-info-email").textContent = email;
+  $("prof-modal-mode").innerHTML = isLocal
+    ? "🔒 Local mode"
+    : "🌐 Cloud account";
+
+  // ── Member since ────────────────────────────────────────────────────
+  const since = user && user.metadata && user.metadata.creationTime
+    ? formatDate(new Date(user.metadata.creationTime).toISOString().slice(0,10))
+    : "—";
+  $("prof-info-since").textContent = since;
+
+  // ── Storage ─────────────────────────────────────────────────────────
+  $("prof-info-storage").textContent = storageUsed() + " (local)";
+
+  // ── Schedule summary ─────────────────────────────────────────────────
+  const s = state.settings;
+  $("prof-info-schedule").textContent =
+    `${fmt12(s.wake || "06:30")} – ${fmt12(s.bed || "22:30")}`;
+
+  // ── Commute ──────────────────────────────────────────────────────────
+  $("prof-info-commute").textContent =
+    `${s.travelTo || 0} min to + ${s.travelHome || 0} min home`;
+
+  // ── Streak ───────────────────────────────────────────────────────────
+  const streak = computeStreak();
+  $("prof-streak-txt").textContent =
+    streak === 0 ? "No streak yet — start studying!" :
+    streak === 1 ? "🔥 1-day streak — keep going!" :
+    `🔥 ${streak}-day streak — awesome!`;
+
+  // ── Weekly stats ─────────────────────────────────────────────────────
+  const { done, hrs } = weeklyStats();
+  $("prof-stat-done").textContent = done;
+  $("prof-stat-hrs").textContent = hrs + "h";
+  $("prof-stat-subj").textContent = state.subjects.length;
+  $("prof-stat-classes").textContent = state.classes.length;
+
+  // ── Top subject ───────────────────────────────────────────────────────
+  const top = topSubjectThisWeek();
+  if (top) {
+    $("prof-top-subj").innerHTML =
+      `<div style="display:flex;align-items:center;gap:.5rem;background:#0c1330;border:1px solid rgba(45,226,230,.25);border-radius:8px;padding:.5rem .8rem">
+        <span style="font-size:1.3rem">🏆</span>
+        <div>
+          <div style="font-weight:700;font-size:.88rem">${esc(top.name)}</div>
+          <div style="font-size:.74rem;color:#9fb9c6">${(top.mins/60).toFixed(1)}h studied this week</div>
+        </div>
+      </div>`;
+    $("prof-top-subj-section").style.display = "";
+  } else {
+    $("prof-top-subj-section").style.display = "none";
+  }
+
+  // ── Clear saved msg & show modal ────────────────────────────────────
+  $("prof-saved-msg").style.display = "none";
+  $("profile-modal").classList.remove("hidden");
+  document.addEventListener("keydown", profEscListener);
+}
+
+function closeProfileModal() {
+  $("profile-modal").classList.add("hidden");
+  document.removeEventListener("keydown", profEscListener);
+}
+
+function profEscListener(e) {
+  if (e.key === "Escape") closeProfileModal();
+}
+
+// Close modal on backdrop click
+$("profile-modal").addEventListener("click", function(e) {
+  if (e.target === this) closeProfileModal();
+});
+
+async function saveProfileChanges() {
+  const newName = $("prof-edit-name").value.trim();
+  if (!newName) { $("prof-edit-name").focus(); return; }
+
+  // Update Firebase display name if logged in
+  if (window._currentUser && window._firebase) {
+    try {
+      const fb = getFirebase();
+      await fb.updateProfile(fb.auth.currentUser, { displayName: newName });
+    } catch(e) { console.warn("Could not update Firebase display name:", e); }
+  }
+
+  // Update UI
+  document.querySelector("#profile-modal .prof-name").textContent = newName;
+  localStorage.setItem("ltp-display-name", newName);
+
+  // Briefly show saved message
+  const msg = $("prof-saved-msg");
+  msg.style.display = "block";
+  setTimeout(() => { msg.style.display = "none"; }, 2500);
+}
+
+function confirmSignOut() {
+  if (confirm("Sign out from Leftover Time Planner?")) {
+    closeProfileModal();
+    doSignOut();
+  }
+}
+
+// Load avatar on page ready
+loadAvatar();
+</script>
+</body>
+</html>

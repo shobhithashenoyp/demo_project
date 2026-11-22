@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en">   nanu nanna account idu pass yenta kotidene gotta enta  guess ninna mobile number nooooo ninna birth date
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leftover Time Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   /* ── Reset & Tokens ───────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #f5f7fa; --surface: #ffffff; --surface2: #eef1f6;
+    --bg: #3f6cb0; --surface: #ffffff; --surface2: #eef1f6;
     --border: #d8dde8; --text: #1a1f36; --text2: #5a607a;
     --accent: #4f6ef7; --accent-h: #3b57e0; --danger: #e53e3e;
-    --warn: #d97706; --ok: #22c55e; --sleep: #818cf8; --travel: #f97316;
+    --warn: #d97706; --ok: #22c55e; --sleep: #818cf8; --travel: #f97316; 
     --class: #06b6d4; --study: #22c55e; --free: #e2e8f0;
     --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,.08);
     --transition: .2s ease;
@@ -116,25 +119,140 @@
   .btn-icon { padding: .3rem .4rem; border-radius: 5px; }
   .icon { font-size: 1rem; line-height: 1; }
 
-  /* ── Auth Page ────────────────────────────────────────────────────── */
+  /* ── Auth Page (neon split login) ─────────────────────────────────── */
   #auth-page {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; background: var(--bg); padding: 1rem;
+    --neon: #2de2e6; --teal: #2fb8c8;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1.4rem; min-height: 100vh; padding: 1.5rem; background: #050816; color: #fff;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
-  .auth-box { background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 2rem; width: 100%; max-width: 380px;
-    box-shadow: var(--shadow); }
-  .auth-box h1 { text-align: center; font-size: 1.3rem; margin-bottom: .3rem; color: var(--accent); }
-  .auth-box .sub { text-align: center; font-size: .82rem; color: var(--text2); margin-bottom: 1.2rem; }
-  .tab-row { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 1.2rem; }
-  .tab { flex: 1; background: none; border: none; border-bottom: 3px solid transparent;
-    cursor: pointer; font-size: .9rem; font-weight: 600; padding: .6rem;
-    color: var(--text2); margin-bottom: -2px; transition: color var(--transition); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .auth-form > * + * { margin-top: .8rem; }
-  .auth-msg { text-align: center; padding: .5rem; border-radius: 6px; font-size: .84rem; }
-  .auth-msg.ok  { background: rgba(34,197,94,.12); color: var(--ok); }
-  .auth-msg.err-box { background: rgba(229,62,62,.1); color: var(--danger); }
+  .auth-box {
+    position: relative; width: min(900px, 100%); height: 540px;
+    background: #070b1c; overflow: hidden;
+    border: 2px solid var(--neon); border-radius: 2px;
+    box-shadow: 0 0 10px var(--neon), 0 0 32px rgba(45,226,230,.55),
+                0 0 80px rgba(45,226,230,.25), inset 0 0 22px rgba(45,226,230,.22);
+  }
+
+  /* Diagonal teal panel */
+  .auth-panel {
+    position: absolute; inset: 0; pointer-events: none;
+    clip-path: polygon(45% 0, 100% 0, 100% 100%, 100% 100%);
+    transition: clip-path .7s cubic-bezier(.65,0,.35,1);
+  }
+  .auth-panel::before, .auth-panel::after {
+    content: ""; position: absolute; inset: 0; transition: opacity .5s ease;
+  }
+  .auth-panel::before { background: linear-gradient(to bottom left, #38c9c9 0%, #1f8696 42%, rgba(7,11,28,0) 88%); opacity: 1; }
+  .auth-panel::after  { background: linear-gradient(to bottom right, #2fb8c8 0%, #1b6678 55%, #0a2535 100%); opacity: 0; }
+  .auth-box[data-mode="signup"] .auth-panel { clip-path: polygon(0 0, 62% 0, 33% 100%, 0 100%); }
+  .auth-box[data-mode="signup"] .auth-panel::before { opacity: 0; }
+  .auth-box[data-mode="signup"] .auth-panel::after  { opacity: 1; }
+
+  /* Swappable layers (forms + welcome text): fade out, then the new one fades in */
+  .auth-swap {
+    --dx: 0px; opacity: 0; visibility: hidden;
+    transition: opacity .25s ease, transform .25s ease, visibility 0s .25s;
+  }
+  .auth-swap.a-in { --dx: -24px; }
+  .auth-swap.a-up { --dx: 24px; }
+  .auth-box[data-mode="signin"] .auth-swap.a-in,
+  .auth-box[data-mode="signup"] .auth-swap.a-up {
+    --dx: 0px; opacity: 1; visibility: visible;
+    transition: opacity .35s ease .4s, transform .35s ease .4s, visibility 0s 0s;
+  }
+
+  .auth-welcome {
+    position: absolute; top: 50%; z-index: 2; transform: translate(var(--dx), -50%);
+    font-size: 2rem; font-weight: 800; line-height: 1.15; letter-spacing: .5px;
+    text-transform: uppercase; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.25);
+  }
+  .auth-welcome.a-in { right: 44px; text-align: right; }
+  .auth-welcome.a-up { left: 44px;  text-align: left; }
+
+  .auth-side {
+    position: absolute; top: 0; bottom: 0; z-index: 2; padding: 0 2rem;
+    display: flex; align-items: center; justify-content: center;
+    transform: translateX(var(--dx));
+  }
+  .auth-side.a-in { left: 0;  width: 55%; }
+  .auth-side.a-up { right: 0; width: 42%; }
+  .auth-form { width: 100%; max-width: 300px; }
+  .auth-title { text-align: center; font-size: 2rem; font-weight: 700; line-height: 1.2; color: #fff; margin-bottom: .6rem; }
+
+  /* Underline-only fields with floating labels */
+  #auth-page .a-field { position: relative; height: 50px; margin-top: 1.3rem;
+    border-bottom: 2px solid #d9dee8; transition: border-color .25s ease; }
+  #auth-page .a-field:focus-within { border-bottom-color: var(--teal); }
+  #auth-page .a-field input {
+    width: 100%; height: 100%; padding: 14px 2rem 0 0; background: transparent;
+    border: none; border-radius: 0; box-shadow: none; outline: none;
+    color: #fff; font: 500 1rem 'Poppins', sans-serif;
+  }
+  #auth-page .a-field input:focus { border: none; box-shadow: none; }
+  #auth-page .a-field input:-webkit-autofill {
+    -webkit-text-fill-color: #fff; transition: background-color 9999s ease-out 0s;
+    -webkit-box-shadow: 0 0 0 40px #070b1c inset;
+  }
+  #auth-page .a-field label {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: block;
+    font-size: 1rem; font-weight: 500; color: #fff; pointer-events: none;
+    transition: top .25s ease, transform .25s ease, font-size .25s ease, color .25s ease;
+  }
+  #auth-page .a-field input:focus + label,
+  #auth-page .a-field input:not(:placeholder-shown) + label {
+    top: 0; transform: translateY(-2px); font-size: .82rem; font-weight: 600; color: var(--teal);
+  }
+  #auth-page .a-icon {
+    position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+    width: 18px; height: 18px; color: #fff; transition: color .25s ease;
+    background: none; border: none; padding: 0; display: block;
+  }
+  #auth-page .a-icon svg { width: 100%; height: 100%; display: block; }
+  #auth-page .a-eye { cursor: pointer; }
+  #auth-page .a-eye:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+  #auth-page .a-field:focus-within .a-icon { color: var(--teal); }
+
+  /* Pill button */
+  #auth-page .a-btn {
+    width: 100%; height: 46px; margin-top: 1.6rem; border-radius: 999px; cursor: pointer;
+    border: 1.5px solid rgba(180,245,250,.85);
+    background: linear-gradient(to bottom, #38c9d3 0%, #12606e 100%);
+    color: #fff; font: 600 .95rem 'Poppins', sans-serif;
+    transition: box-shadow .25s ease, filter .25s ease, transform .15s ease;
+  }
+  #auth-page .a-btn:hover:not(:disabled) { box-shadow: 0 0 18px rgba(45,226,230,.75); filter: brightness(1.12); }
+  #auth-page .a-btn:active:not(:disabled) { transform: scale(.98); }
+  #auth-page .a-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  #auth-page .a-btn:disabled { opacity: .7; cursor: wait; }
+
+  .a-switch { margin-top: 1.1rem; text-align: center; font-size: .8rem; line-height: 1.6; color: #fff; }
+  .a-switch button { display: block; margin: 0 auto; background: none; border: none; cursor: pointer;
+    color: var(--teal); font: 700 .85rem 'Poppins', sans-serif; }
+  .a-switch button:hover { color: var(--neon); text-decoration: underline; }
+  .a-switch button:focus-visible, .a-local:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+
+  .a-local { background: none; border: none; cursor: pointer; color: #8fb8c4;
+    font: 500 .8rem 'Poppins', sans-serif; transition: color .2s ease; }
+  .a-local:hover { color: var(--neon); }
+  .a-local small { opacity: .7; font-size: .72rem; }
+
+  .auth-msg { text-align: center; padding: .4rem .5rem; border-radius: 6px; font-size: .78rem; margin-top: .8rem; }
+  .auth-msg.ok  { background: rgba(34,197,94,.14); color: #6ee79a; }
+  .auth-msg.err-box { background: rgba(248,113,113,.12); color: #ff9a9a; }
+
+  @media (max-width: 720px) {
+    #auth-page { padding: .75rem; }
+    .auth-box { height: 640px; }
+    #auth-page .auth-box .auth-panel { inset: 0 0 auto 0; height: 170px;
+      clip-path: polygon(0 0, 100% 0, 100% 55%, 0 100%); }
+    #auth-page .auth-box .auth-panel::before { background: linear-gradient(to bottom left, #38c9c9 0%, #1f8696 60%, #12404f 100%); }
+    .auth-welcome { top: 66px; font-size: 1.6rem; }
+    .auth-welcome.a-in, .auth-welcome.a-up { left: 0; right: 0; text-align: center; }
+    .auth-side.a-in, .auth-side.a-up { left: 0; right: 0; width: 100%; top: 175px; bottom: 0;
+      align-items: flex-start; padding: 0 1.5rem; }
+    .auth-title { font-size: 1.7rem; }
+  }
 
   /* ── Tabs inside app ─────────────────────────────────────────────── */
   .section-tabs { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .8rem; }
@@ -286,49 +404,59 @@
 </div>
 
 <!-- Auth Page -->
-<div id="auth-page" class="hidden">
-  <div class="auth-box">
-    <h1>⏳ Leftover Time Planner</h1>
-    <p class="sub">Turn your free hours into focused study sessions</p>
-    <div class="tab-row" role="tablist" aria-label="Authentication">
-      <button class="tab active" role="tab" aria-selected="true" onclick="showAuthTab('signin')" id="tab-signin">Sign in</button>
-      <button class="tab" role="tab" aria-selected="false" onclick="showAuthTab('signup')" id="tab-signup">Create account</button>
+<div id="auth-page">
+  <div class="auth-box" id="auth-box" data-mode="signin">
+    <div class="auth-panel" aria-hidden="true"></div>
+    <div class="auth-welcome auth-swap a-in" aria-hidden="true">Welcome<br>Back!</div>
+    <div class="auth-welcome auth-swap a-up" aria-hidden="true">Welcome!</div>
+
+    <!-- Login -->
+    <div class="auth-side auth-swap a-in">
+      <form id="signin-form" class="auth-form" onsubmit="doSignIn(event)">
+        <h2 class="auth-title">Login</h2>
+        <div class="a-field">
+          <input type="email" id="si-email" autocomplete="email" placeholder=" " required>
+          <label for="si-email">Email</label>
+          <span class="a-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg></span>
+        </div>
+        <div class="a-field">
+          <input type="password" id="si-pass" autocomplete="current-password" placeholder=" " required>
+          <label for="si-pass">Password</label>
+          <button type="button" class="a-icon a-eye" id="toggle-pw" aria-label="Show password" aria-pressed="false" onclick="togglePw('si-pass', this)"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2zm-7-2a2 2 0 0 1 4 0v2h-4V7z"/></svg></button>
+        </div>
+        <div id="si-msg"></div>
+        <button class="a-btn" type="submit" id="si-btn">Login</button>
+        <p class="a-switch">Don't have an account?<button type="button" onclick="showAuthTab('signup')">Sign Up</button></p>
+      </form>
     </div>
-    <!-- Sign In -->
-    <form id="signin-form" class="auth-form" onsubmit="doSignIn(event)" novalidate>
-      <label>Email <span class="req">*</span>
-        <input type="email" id="si-email" autocomplete="email" required placeholder="you@university.edu">
-      </label>
-      <label>Password <span class="req">*</span>
-        <input type="password" id="si-pass" autocomplete="current-password" required placeholder="Your password">
-      </label>
-      <div id="si-msg"></div>
-      <button class="btn btn-primary" style="width:100%" type="submit" id="si-btn">Sign in</button>
-    </form>
-    <!-- Sign Up -->
-    <form id="signup-form" class="auth-form hidden" onsubmit="doSignUp(event)" novalidate>
-      <label>Email <span class="req">*</span>
-        <input type="email" id="su-email" autocomplete="email" required placeholder="you@university.edu">
-      </label>
-      <label>Password <span class="req">*</span>
-        <input type="password" id="su-pass" autocomplete="new-password" required placeholder="Min 6 characters">
-      </label>
-      <label>Confirm password <span class="req">*</span>
-        <input type="password" id="su-pass2" autocomplete="new-password" required placeholder="Repeat password">
-      </label>
-      <div id="su-msg"></div>
-      <button class="btn btn-primary" style="width:100%" type="submit" id="su-btn">Create account</button>
-    </form>
-    <hr style="margin:.8rem 0">
-    <div style="text-align:center">
-      <button class="btn btn-ghost btn-sm" onclick="enterLocalMode()" style="font-size:.8rem;color:var(--text2)">
-        🔓 Try without an account <span style="font-size:.72rem;opacity:.7">(local only)</span>
-      </button>
-    </div>
-    <div class="row" style="margin-top:.6rem;justify-content:flex-end">
-      <button class="btn btn-ghost btn-sm btn-icon" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark/light">🌙</button>
+
+    <!-- Register -->
+    <div class="auth-side auth-swap a-up">
+      <form id="signup-form" class="auth-form" onsubmit="doSignUp(event)">
+        <h2 class="auth-title">Register</h2>
+        <div class="a-field">
+          <input type="text" id="su-user" autocomplete="username" placeholder=" " required>
+          <label for="su-user">Username</label>
+          <span class="a-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg></span>
+        </div>
+        <div class="a-field">
+          <input type="email" id="su-email" autocomplete="email" placeholder=" " required>
+          <label for="su-email">Email</label>
+          <span class="a-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm9 7.2L4.6 7 4 8.1l8 5.2 8-5.2L19.4 7 12 12.2z"/></svg></span>
+        </div>
+        <div class="a-field">
+          <input type="password" id="su-pass" autocomplete="new-password" placeholder=" " required minlength="6">
+          <label for="su-pass">Password</label>
+          <button type="button" class="a-icon a-eye" id="toggle-pw2" aria-label="Show password" aria-pressed="false" onclick="togglePw('su-pass', this)"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2zm-7-2a2 2 0 0 1 4 0v2h-4V7z"/></svg></button>
+        </div>
+        <div id="su-msg"></div>
+        <button class="a-btn" type="submit" id="su-btn">Register</button>
+        <p class="a-switch">Already have an account?<button type="button" onclick="showAuthTab('signin')">Sign In</button></p>
+      </form>
     </div>
   </div>
+
+  <button class="a-local" onclick="enterLocalMode()">🔓 Try without an account <small>(local only)</small></button>
 </div>
 
 <!-- Main App -->
@@ -510,7 +638,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  signOut, onAuthStateChanged
+  signOut, onAuthStateChanged, updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, setDoc, getDoc, onSnapshot
@@ -530,7 +658,7 @@ const auth   = getAuth(fbApp);
 const db     = getFirestore(fbApp);
 
 // Expose to global scope so non-module JS can call them
-window._firebase = { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, doc, setDoc, getDoc, onSnapshot };
+window._firebase = { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, doc, setDoc, getDoc, onSnapshot };
 
 // ── Auth state listener ────────────────────────────────────────────────────
 onAuthStateChanged(auth, user => {
@@ -602,12 +730,16 @@ function toggleTheme() {
 function getFirebase() { return window._firebase; }
 
 function showAuthTab(tab) {
-  $("signin-form").classList.toggle("hidden", tab !== "signin");
-  $("signup-form").classList.toggle("hidden", tab !== "signup");
-  $("tab-signin").classList.toggle("active", tab === "signin");
-  $("tab-signup").classList.toggle("active", tab === "signup");
-  $("tab-signin").setAttribute("aria-selected", tab === "signin");
-  $("tab-signup").setAttribute("aria-selected", tab === "signup");
+  $("auth-box").dataset.mode = tab;   // CSS drives the panel morph + form swap
+  authMsg("si-msg", "", ""); authMsg("su-msg", "", "");
+}
+
+function togglePw(inputId, btn) {
+  const input = $(inputId);
+  const show = input.type === "password";
+  input.type = show ? "text" : "password";
+  btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+  btn.setAttribute("aria-pressed", String(show));
 }
 
 function authMsg(elId, text, type) {
@@ -629,25 +761,26 @@ async function doSignIn(e) {
     await fb.signInWithEmailAndPassword(fb.auth, email, pass);
   } catch(err) {
     authMsg("si-msg", friendlyAuthError(err.code), "err-box");
-    btn.disabled = false; btn.textContent = "Sign in";
+    btn.disabled = false; btn.textContent = "Login";
   }
 }
 
 async function doSignUp(e) {
   e.preventDefault();
+  const username = $("su-user").value.trim();
   const email = $("su-email").value.trim();
   const pass  = $("su-pass").value;
-  const pass2 = $("su-pass2").value;
+  if (username.length < 2) { authMsg("su-msg","Username must be at least 2 characters","err-box"); return; }
   if (!validateEmail(email)) { authMsg("su-msg","Invalid email address","err-box"); return; }
   if (pass.length < 6) { authMsg("su-msg","Password must be at least 6 characters","err-box"); return; }
-  if (pass !== pass2)  { authMsg("su-msg","Passwords don't match","err-box"); return; }
   const btn = $("su-btn"); btn.disabled = true; btn.textContent = "Creating…";
   try {
     const fb = getFirebase();
-    await fb.createUserWithEmailAndPassword(fb.auth, email, pass);
+    const cred = await fb.createUserWithEmailAndPassword(fb.auth, email, pass);
+    try { await fb.updateProfile(cred.user, { displayName: username }); } catch (_) {}
   } catch(err) {
     authMsg("su-msg", friendlyAuthError(err.code), "err-box");
-    btn.disabled = false; btn.textContent = "Create account";
+    btn.disabled = false; btn.textContent = "Register";
   }
 }
 
@@ -721,10 +854,11 @@ window._onLogout = function() {
   $("app-page").classList.add("hidden");
   $("auth-page").classList.remove("hidden");
   // Reset forms
-  $("si-btn").disabled = false; $("si-btn").textContent = "Sign in";
-  $("su-btn").disabled = false; $("su-btn").textContent = "Create account";
+  $("si-btn").disabled = false; $("si-btn").textContent = "Login";
+  $("su-btn").disabled = false; $("su-btn").textContent = "Register";
   $("si-email").value = ""; $("si-pass").value = "";
-  $("su-email").value = ""; $("su-pass").value = ""; $("su-pass2").value = "";
+  $("su-user").value = ""; $("su-email").value = ""; $("su-pass").value = "";
+  $("auth-box").dataset.mode = "signin";
   authMsg("si-msg","",""); authMsg("su-msg","","");
 };
 

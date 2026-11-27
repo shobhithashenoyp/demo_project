@@ -19,8 +19,8 @@
     --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,.08);
     --transition: .2s ease;
   }
-  [data-theme="dark"] {                                                   
-    --bg: #0f1117; --surface: #1a1d2e; --surface2: #242740;                    
+  [data-theme="dark"] {
+    --bg: #0f1117; --surface: #1a1d2e; --surface2: #242740;
     --border: #2e3250; --text: #e8ecf5; --text2: #8891b2;
     --accent: #6678ff; --accent-h: #7a8bff; --danger: #f87171;
     --warn: #fbbf24; --ok: #4ade80; --sleep: #a5b4fc; --travel: #fb923c;
@@ -378,96 +378,6 @@
   .toggle input:checked ~ .toggle-knob { transform: translateX(16px); }
   .toggle:has(input:checked) { background: var(--accent); }
 
-  /* ── Profile Modal ────────────────────────────────────────────────── */
-  #profile-modal {
-    position: fixed; inset: 0; z-index: 10001; background: rgba(0,0,0,.55);
-    display: flex; align-items: center; justify-content: center; padding: 1rem;
-    backdrop-filter: blur(4px);
-  }
-  #profile-modal .prof-box {
-    background: #070b1c; color: #fff; border: 1.5px solid rgba(45,226,230,.5);
-    border-radius: 16px; width: 100%; max-width: 420px;
-    box-shadow: 0 0 24px rgba(45,226,230,.35), 0 8px 40px rgba(0,0,0,.5);
-    font-family: 'Poppins', sans-serif; overflow: hidden;
-  }
-  .prof-header {
-    background: linear-gradient(135deg, #0c2a3a 0%, #0f4a5a 50%, #072030 100%);
-    padding: 2rem 1.5rem 1.2rem; text-align: center; position: relative;
-    border-bottom: 1px solid rgba(45,226,230,.25);
-  }
-  .prof-header::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at 50% 0%, rgba(45,226,230,.22) 0%, transparent 70%);
-  }
-  .prof-avatar {
-    width: 80px; height: 80px; border-radius: 50%; margin: 0 auto .8rem;
-    background: linear-gradient(135deg, #38c9d3, #12606e);
-    border: 3px solid rgba(45,226,230,.7);
-    box-shadow: 0 0 20px rgba(45,226,230,.5), 0 0 40px rgba(45,226,230,.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2.4rem; position: relative; z-index: 1; cursor: pointer;
-    transition: transform .2s ease, box-shadow .2s ease;
-  }
-  .prof-avatar:hover { transform: scale(1.06); box-shadow: 0 0 28px rgba(45,226,230,.8), 0 0 50px rgba(45,226,230,.3); }
-  .prof-avatar input[type="file"] { display: none; }
-  .prof-avatar-hint { font-size: .68rem; color: rgba(45,226,230,.6); margin-top: -.3rem; margin-bottom: .4rem; position: relative; z-index: 1; }
-  .prof-name {
-    font-size: 1.25rem; font-weight: 800; color: #fff; position: relative; z-index: 1;
-    text-shadow: 0 0 14px rgba(45,226,230,.6); letter-spacing: .3px;
-  }
-  .prof-email { font-size: .8rem; color: #9fb9c6; margin-top: .15rem; position: relative; z-index: 1; }
-  .prof-badge {
-    display: inline-flex; align-items: center; gap: .3rem; margin-top: .6rem;
-    padding: .2rem .7rem; border-radius: 999px; font-size: .72rem; font-weight: 700;
-    background: rgba(45,226,230,.14); border: 1px solid rgba(45,226,230,.4); color: #2de2e6;
-    position: relative; z-index: 1;
-  }
-  .prof-body { padding: 1.2rem 1.5rem; }
-  .prof-section { margin-bottom: 1.1rem; }
-  .prof-section-title {
-    font-size: .68rem; font-weight: 700; color: #2fb8c8; text-transform: uppercase;
-    letter-spacing: .08em; margin-bottom: .6rem; display: flex; align-items: center; gap: .4rem;
-  }
-  .prof-section-title::after { content: ""; flex: 1; height: 1px; background: rgba(45,226,230,.2); }
-  .prof-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
-  .prof-stat {
-    background: #0c1330; border: 1px solid rgba(45,226,230,.2); border-radius: 8px;
-    padding: .6rem .8rem; text-align: center; transition: border-color .2s ease;
-  }
-  .prof-stat:hover { border-color: rgba(45,226,230,.5); }
-  .prof-stat .ps-val { font-size: 1.4rem; font-weight: 800; color: #2de2e6; line-height: 1.1;
-    text-shadow: 0 0 10px rgba(45,226,230,.5); }
-  .prof-stat .ps-lbl { font-size: .68rem; color: #9fb9c6; margin-top: .15rem; }
-  .prof-info-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid rgba(45,226,230,.1); font-size: .82rem; }
-  .prof-info-row:last-child { border-bottom: none; }
-  .prof-info-row .pir-key { color: #9fb9c6; display: flex; align-items: center; gap: .4rem; }
-  .prof-info-row .pir-val { color: #fff; font-weight: 600; text-align: right; word-break: break-all; }
-  .prof-edit-field { background: transparent; color: #fff; border: none; border-bottom: 2px solid rgba(45,226,230,.4); font: 600 .82rem 'Poppins',sans-serif; padding: .2rem .1rem; outline: none; text-align: right; min-width: 80px; max-width: 150px; }
-  .prof-edit-field:focus { border-bottom-color: #2de2e6; }
-  .prof-footer { padding: .8rem 1.5rem 1.2rem; display: flex; gap: .5rem; justify-content: flex-end; border-top: 1px solid rgba(45,226,230,.15); flex-wrap: wrap; }
-  /* Profile avatar button in topbar */
-  .prof-btn {
-    width: 34px; height: 34px; border-radius: 50%; border: 2px solid rgba(45,226,230,.5);
-    background: linear-gradient(135deg, #38c9d3, #12606e);
-    display: flex; align-items: center; justify-content: center; cursor: pointer;
-    font-size: 1.1rem; box-shadow: 0 0 10px rgba(45,226,230,.3);
-    transition: box-shadow .2s ease, transform .2s ease; flex-shrink: 0;
-    position: relative; overflow: hidden;
-  }
-  .prof-btn:hover { box-shadow: 0 0 18px rgba(45,226,230,.7); transform: scale(1.08); }
-  .prof-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-  .prof-btn img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; position: absolute; inset: 0; }
-  .prof-streak { display: flex; align-items: center; gap: .4rem; justify-content: center; padding: .5rem; background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.25); border-radius: 8px; margin-bottom: .8rem; }
-  .prof-streak .ps-fire { font-size: 1.3rem; }
-  .prof-streak .ps-txt { font-size: .8rem; color: #fbbf24; font-weight: 600; }
-  .prof-btn-danger-sm { background: transparent; border: 1px solid rgba(255,123,123,.5); color: #ff9a9a; border-radius: 999px; padding: .35rem .8rem; font: 600 .78rem 'Poppins',sans-serif; cursor: pointer; transition: background .2s ease; }
-  .prof-btn-danger-sm:hover { background: rgba(255,123,123,.15); }
-  .prof-save-btn { background: linear-gradient(to bottom,#38c9d3,#12606e); border: 1.5px solid rgba(180,245,250,.85); color: #fff; border-radius: 999px; padding: .35rem 1rem; font: 600 .82rem 'Poppins',sans-serif; cursor: pointer; transition: box-shadow .2s ease; }
-  .prof-save-btn:hover { box-shadow: 0 0 14px rgba(45,226,230,.7); }
-  .prof-close-btn { background: transparent; border: 1.5px solid rgba(45,226,230,.4); color: #bfeff2; border-radius: 999px; padding: .35rem .9rem; font: 600 .82rem 'Poppins',sans-serif; cursor: pointer; transition: background .2s ease; }
-  .prof-close-btn:hover { background: rgba(45,226,230,.12); }
-  .prof-saved-msg { font-size: .75rem; color: #4ade80; margin-left: auto; padding: .3rem 0; display: none; }
-
   /* ── Loading overlay ─────────────────────────────────────────────── */
   #loading-overlay {
     position: fixed; inset: 0; background: var(--bg);
@@ -671,6 +581,53 @@
   #app-page .page-cta { display: flex; flex-direction: column; align-items: center; gap: .6rem; margin: 1.2rem 0 .6rem; }
   #app-page .page-cta .btn { padding: .7rem 2rem; font-size: .95rem; }
   #app-page .page-top { margin-bottom: .8rem; }
+
+  /* Ignore-subject option */
+  #app-page .ignore-toggle { flex-direction: row; align-items: center; gap: .45rem; margin-top: .35rem; cursor: pointer; color: #bfeff2; font-weight: 500; }
+  #app-page .ignore-toggle input { width: auto; accent-color: var(--teal); cursor: pointer; }
+  #app-page .subj-item.ignored { opacity: .65; border-style: dashed; }
+  #app-page .ign-badge { font-size: .65rem; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; padding: .05rem .4rem; margin-left: .3rem;
+    border-radius: 999px; border: 1px solid rgba(255,123,123,.6); color: #ff9a9a; vertical-align: middle; }
+  /* ── Profile button + modal ───────────────────────────────────────── */
+.prof-btn {
+  width: 36px; height: 36px; border-radius: 50%; cursor: pointer; flex-shrink: 0;
+  display: inline-grid; place-items: center; font-size: 1.15rem; line-height: 1;
+  background: #0c1330; color: #fff; border: 1.5px solid rgba(45,226,230,.6);
+  transition: box-shadow .2s ease, transform .15s ease;
+}
+.prof-btn:hover { box-shadow: 0 0 14px rgba(45,226,230,.7); }
+.prof-btn:active { transform: scale(.95); }
+.prof-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+#pf-modal { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.65);
+  display: flex; align-items: center; justify-content: center; padding: 1rem; }
+#pf-modal .pf-box { background: #070b1c; color: #fff; border: 1.5px solid rgba(45,226,230,.45);
+  border-radius: 12px; width: 100%; max-width: 420px; max-height: 90vh; overflow: auto;
+  box-shadow: 0 0 18px rgba(45,226,230,.3); font-family: 'Poppins', sans-serif; padding: 1.2rem; }
+#pf-modal .pf-top { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .2rem; margin-bottom: 1rem; }
+#pf-modal .pf-avatar { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 2.4rem; background: #0c1330; border: 2px solid var(--neon, #2de2e6);
+  box-shadow: 0 0 14px rgba(45,226,230,.55); margin-bottom: .4rem; }
+#pf-modal .pf-name { font-size: 1.15rem; font-weight: 700; word-break: break-word; }
+#pf-modal .pf-sub { font-size: .8rem; color: #9fb9c6; word-break: break-all; }
+#pf-modal .pf-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem; margin-bottom: 1rem; }
+#pf-modal .pf-stat { background: #0c1330; border: 1px solid rgba(45,226,230,.25); border-radius: 8px; padding: .55rem .7rem; }
+#pf-modal .pf-stat b { display: block; font-size: 1.15rem; color: #2de2e6; }
+#pf-modal .pf-stat span { font-size: .72rem; color: #9fb9c6; text-transform: uppercase; letter-spacing: .4px; }
+#pf-modal h4 { font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; color: #2fb8c8; margin: .8rem 0 .4rem; }
+#pf-modal .pf-avatars { display: flex; flex-wrap: wrap; gap: .4rem; }
+#pf-modal .pf-av { width: 38px; height: 38px; border-radius: 50%; font-size: 1.2rem; cursor: pointer;
+  background: transparent; border: 1.5px solid rgba(45,226,230,.3); color: #fff; }
+#pf-modal .pf-av:hover { background: rgba(45,226,230,.12); }
+#pf-modal .pf-av[aria-pressed="true"] { border-color: #2de2e6; box-shadow: 0 0 10px rgba(45,226,230,.7); }
+#pf-modal .pf-av:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+#pf-modal .pf-edit { display: flex; gap: .5rem; align-items: center; }
+#pf-modal .pf-edit input { flex: 1; background: transparent; color: #fff; border: none;
+  border-bottom: 2px solid #d9dee8; padding: .4rem .1rem; font: inherit; font-size: .9rem; outline: none; }
+#pf-modal .pf-edit input:focus { border-bottom-color: #2fb8c8; }
+#pf-modal .pf-msg { font-size: .78rem; min-height: 1.1em; margin-top: .4rem; color: #6ee79a; }
+#pf-modal .pf-msg.error { color: #ff9a9a; }
+#pf-modal .pf-foot { display: flex; justify-content: space-between; gap: .5rem; margin-top: 1.1rem; }  
 </style>
 </head>
 <body>
@@ -740,14 +697,14 @@
 
 <!-- Main App -->
 <div id="app-page" class="app-shell hidden">
-  <header class="topbar">
-    <h1>⏳ Leftover Time Planner</h1>
-    <span class="user-label" id="user-email-label"></span>
-    <button class="prof-btn" id="topbar-profile-btn" onclick="openProfileModal()" aria-label="View profile" title="View profile">
-      <span id="topbar-avatar-emoji">👤</span>
-    </button>
-    <button class="btn btn-ghost btn-sm" onclick="doSignOut()">Sign out</button>
-  </header>
+ <header class="topbar">
+  <h1>⏳ Leftover Time Planner</h1>
+  <span class="user-label" id="user-email-label"></span>
+  <button class="prof-btn" id="topbar-profile-btn" onclick="openProfileModal()" aria-haspopup="dialog" aria-label="View profile" title="View profile">
+    <span id="topbar-avatar-emoji">👤</span>
+  </button>
+  <button class="btn btn-ghost btn-sm" onclick="doSignOut()">Sign out</button>
+</header>
 
   <main class="content">
     <!-- Page switcher -->
@@ -792,6 +749,12 @@
                   </label>
                   <span id="reminder-status" class="text-sm">Off</span>
                 </div>
+              </label>
+            </div>
+            <div class="form-row">
+              <label style="flex:1">Dinner time
+                <div class="tp" data-target="dinner-time" data-fixed="PM" data-onchange="settingsChanged"></div><input type="hidden" id="dinner-time" value="20:00">
+                <span class="hint">Study blocks are planned around this break.</span>
               </label>
             </div>
           </div>
@@ -845,6 +808,55 @@
               <button class="btn btn-primary btn-sm" type="submit">➕ Add subject</button>
             </form>
           </div>
+          <!-- Other works progress -->
+<div class="card">
+  <h2>🧩 Other Works</h2>
+  <div id="works-progress-content"></div>
+</div>
+        <!-- Other Works -->
+<div class="card">
+  <h2>🧩 Other Works</h2>
+  <p class="hint" style="margin-bottom:.6rem">Assignments, skill development, projects… these get study blocks in your plan too.</p>
+  <div id="work-list" class="subj-list"></div>
+  <form onsubmit="addWork(event)" novalidate>
+    <div class="form-row">
+      <label style="flex:1">Name
+        <input type="text" id="wk-name" placeholder="e.g. DBMS assignment 2" maxlength="50">
+      </label>
+      <label style="flex:1">Type
+        <select id="wk-type" onchange="workTypeChanged()">
+          <option value="assignment" selected>Assignment 📝</option>
+          <option value="skill">Skill development 🎯</option>
+          <option value="other">Other 📌</option>
+        </select>
+      </label>
+    </div>
+    <div class="form-row">
+      <label style="flex:1">Priority
+        <select id="wk-prio">
+          <option value="high">High 🔥</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </label>
+    </div>
+    <div class="form-row" id="wk-assign-fields">
+      <label style="flex:1">Due date
+        <input type="date" id="wk-due">
+      </label>
+      <label style="flex:1">Estimated hours
+        <input type="number" id="wk-est" value="3" min="0.5" max="100" step="0.5">
+      </label>
+    </div>
+    <div class="form-row hidden" id="wk-week-fields">
+      <label style="flex:1">Weekly goal (hrs)
+        <input type="number" id="wk-goal" value="2" min="0.5" max="40" step="0.5">
+      </label>
+    </div>
+    <div id="wk-err" class="err hidden"></div>
+    <button class="btn btn-primary btn-sm" type="submit">➕ Add work</button>
+  </form>
+</div> 
         </div>
         <div>
   <!-- Timetable -->
@@ -951,7 +963,7 @@
             <div class="row" style="margin-bottom:.8rem">
               <h2 style="margin:0">🗓️ Study Plan</h2>
               <div class="spacer"></div>
-              <button class="btn btn-ghost btn-sm" onclick="regeneratePlan()">🔄 Regenerate</button>
+              <button class="btn btn-ghost btn-sm" onclick="regenerateClick()">🔄 Regenerate</button>
             </div>
             <div class="section-tabs" id="plan-day-tabs"></div>
             <div id="plan-content">
@@ -969,98 +981,6 @@
 </div>
 
 <!-- Firebase SDK -->
-
-<!-- ══════════════ PROFILE MODAL ══════════════ -->
-<div id="profile-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="prof-modal-title">
-  <div class="prof-box">
-    <!-- Header with avatar + name -->
-    <div class="prof-header">
-      <div class="prof-avatar" onclick="document.getElementById('prof-avatar-file').click()" title="Click to change avatar" aria-label="Change profile picture">
-        <span id="prof-avatar-emoji-modal">👤</span>
-        <img id="prof-avatar-img" src="" alt="" style="display:none">
-      </div>
-      <input type="file" id="prof-avatar-file" accept="image/*" onchange="handleAvatarUpload(this.files[0]); this.value='';">
-      <div class="prof-avatar-hint">tap to change picture</div>
-      <div class="prof-name" id="prof-modal-title" id="prof-display-name">—</div>
-      <div class="prof-email" id="prof-modal-email">—</div>
-      <div class="prof-badge" id="prof-modal-mode">🌐 Cloud account</div>
-    </div>
-
-    <div class="prof-body">
-      <!-- Streak -->
-      <div class="prof-streak" id="prof-streak-row">
-        <span class="ps-fire">🔥</span>
-        <span class="ps-txt" id="prof-streak-txt">0-day streak</span>
-      </div>
-
-      <!-- Stats -->
-      <div class="prof-section">
-        <div class="prof-section-title">📊 This week</div>
-        <div class="prof-stat-grid">
-          <div class="prof-stat">
-            <div class="ps-val" id="prof-stat-done">0</div>
-            <div class="ps-lbl">Blocks done</div>
-          </div>
-          <div class="prof-stat">
-            <div class="ps-val" id="prof-stat-hrs">0h</div>
-            <div class="ps-lbl">Hours studied</div>
-          </div>
-          <div class="prof-stat">
-            <div class="ps-val" id="prof-stat-subj">0</div>
-            <div class="ps-lbl">Subjects</div>
-          </div>
-          <div class="prof-stat">
-            <div class="ps-val" id="prof-stat-classes">0</div>
-            <div class="ps-lbl">Classes / week</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Account info -->
-      <div class="prof-section">
-        <div class="prof-section-title">👤 Account info</div>
-        <div class="prof-info-row">
-          <span class="pir-key">🏷️ Display name</span>
-          <input class="prof-edit-field" id="prof-edit-name" type="text" maxlength="40" placeholder="Your name" aria-label="Edit display name">
-        </div>
-        <div class="prof-info-row">
-          <span class="pir-key">📧 Email</span>
-          <span class="pir-val" id="prof-info-email">—</span>
-        </div>
-        <div class="prof-info-row">
-          <span class="pir-key">🕐 Member since</span>
-          <span class="pir-val" id="prof-info-since">—</span>
-        </div>
-        <div class="prof-info-row">
-          <span class="pir-key">💾 Data stored</span>
-          <span class="pir-val" id="prof-info-storage">—</span>
-        </div>
-        <div class="prof-info-row">
-          <span class="pir-key">⏰ Wake / Sleep</span>
-          <span class="pir-val" id="prof-info-schedule">—</span>
-        </div>
-        <div class="prof-info-row">
-          <span class="pir-key">🚌 Daily commute</span>
-          <span class="pir-val" id="prof-info-commute">—</span>
-        </div>
-      </div>
-
-      <!-- Top subject -->
-      <div class="prof-section" id="prof-top-subj-section">
-        <div class="prof-section-title">🏆 Top subject this week</div>
-        <div id="prof-top-subj">—</div>
-      </div>
-    </div>
-
-    <div class="prof-footer">
-      <button class="prof-btn-danger-sm" onclick="confirmSignOut()">🚪 Sign out</button>
-      <span class="prof-saved-msg" id="prof-saved-msg">✅ Saved!</span>
-      <button class="prof-close-btn" onclick="closeProfileModal()">Close</button>
-      <button class="prof-save-btn" onclick="saveProfileChanges()">💾 Save changes</button>
-    </div>
-  </div>
-</div>
-
 <!-- Timetable import review -->
 <div id="tt-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="tt-title">
   <div class="tt-box">
@@ -1097,6 +1017,10 @@
     </div>
     <div class="err hidden" id="ex-err" style="padding:0 1rem .6rem"></div>
   </div>
+</div>
+<!-- Profile module -->
+<div id="pf-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="pf-title" onclick="if(event.target===this)closeProfileModal()">
+  <div class="pf-box" id="pf-box"></div>
 </div>
 
 <script type="module">
@@ -1146,7 +1070,7 @@ onAuthStateChanged(auth, user => {
 // ══════════════════════════════════════════════════════════════════════════════
 const DEFAULT_SETTINGS = {
   wake: "06:30", bed: "22:30", travelTo: 45, travelHome: 45,
-  dinnerDur: 30, reminder: false
+  dinnerDur: 30, dinnerTime: "20:00", reminder: false
 };
 let state = {
   settings: { ...DEFAULT_SETTINGS },
@@ -1155,6 +1079,8 @@ let state = {
   plan: {},             // { YYYY-MM-DD: [ block... ] }
   completions: {},      // { blockId: true }
   weeklyHours: {},      // { subjectId: minutesDone_this_week }
+  planGenerated: false, // true only after the user clicks "Generate my plan"
+  planSeed: 0,          // bumped by "Regenerate" to rearrange the plan
 };
 let _unsub = null;      // Firestore listener unsubscribe
 let _reminderTimer = null;
@@ -1303,7 +1229,7 @@ async function doSignOut() {
   if (window._localMode) {
     window._localMode = false;
     // Reset state
-    state = { settings: { ...DEFAULT_SETTINGS }, subjects: [], classes: [], plan: {}, completions: {}, weeklyHours: {} };
+    state = { settings: { ...DEFAULT_SETTINGS }, subjects: [], classes: [], plan: {}, completions: {}, weeklyHours: {}, planGenerated: false, planSeed: 0 };
     if (_unsub) { _unsub(); _unsub = null; }
     $("app-page").classList.add("hidden"); showPage("setup");
     $("auth-page").classList.remove("hidden");
@@ -1393,6 +1319,8 @@ async function loadUserData(uid) {
       state.plan       = d.plan       || {};
       state.completions= d.completions|| {};
       state.weeklyHours= d.weeklyHours|| {};
+      state.planGenerated = d.planGenerated ?? Object.keys(state.plan).length > 0;
+      state.planSeed = d.planSeed || 0;
     } else {
       // first login — load from localStorage if available
       const ls = localStorage.getItem("ltp-state");
@@ -1409,6 +1337,8 @@ async function loadUserData(uid) {
       state.plan       = d.plan       || {};
       state.completions= d.completions|| {};
       state.weeklyHours= d.weeklyHours|| {};
+      state.planGenerated = d.planGenerated ?? Object.keys(state.plan).length > 0;
+      state.planSeed = d.planSeed || 0;
       applySettingsToUI();
       buildSubjectDropdown();
       renderAll();
@@ -1439,6 +1369,8 @@ async function saveUserData() {
       plan:        state.plan,
       completions: state.completions,
       weeklyHours: state.weeklyHours,
+      planGenerated: !!state.planGenerated,
+      planSeed: state.planSeed || 0,
     }, { merge: true });
   } catch(err) { console.warn("Firestore save failed:", err); }
 }
@@ -1453,6 +1385,7 @@ function applySettingsToUI() {
   $("travel-to").value  = s.travelTo   ?? 45;
   $("travel-home").value= s.travelHome ?? 45;
   $("dinner-dur").value = s.dinnerDur  ?? 30;
+  $("dinner-time").value= s.dinnerTime || "20:00";
   $("reminder-toggle").checked = !!s.reminder;
   $("reminder-status").textContent = s.reminder ? "On" : "Off";
 }
@@ -1464,6 +1397,7 @@ function readSettingsFromUI() {
     travelTo:   Math.max(0, parseInt($("travel-to").value)  || 0),
     travelHome: Math.max(0, parseInt($("travel-home").value)|| 0),
     dinnerDur:  Math.max(0, parseInt($("dinner-dur").value) || 0),
+    dinnerTime: $("dinner-time").value || "20:00",
     reminder:   $("reminder-toggle").checked,
   };
 }
@@ -1547,7 +1481,7 @@ function renderSubjects() {
       <div>
         <strong>${pendingCount} subject${pendingCount > 1 ? "s" : ""} imported from your timetable.</strong><br>
         Set the strength, weekly goal and exam date below, then press <strong>Save subjects</strong>.
-        Once saved, these subjects <strong>can't be changed again</strong> (except the exam date).
+        Tick <strong>Ignore</strong> on rows like Lunch that shouldn't be studied. Once saved, these subjects <strong>can't be changed again</strong> (except the exam date).
         <div style="margin-top:.5rem"><button type="button" class="btn btn-primary btn-sm" onclick="saveImportedSubjects()">💾 Save subjects</button></div>
       </div>
     </div>` : "";
@@ -1573,6 +1507,7 @@ function renderSubjects() {
             <input type="date" value="${esc(s.examDate || "")}" onchange="editSubject('${s.id}','examDate',this.value)">
           </label>
         </div>
+        ${ignoreToggle(s)}
       </div>`;
     }
     const badgeCls = s.strength === "weak" ? "s-weak" : s.strength === "strong" ? "s-strong" : "s-avg";
@@ -1582,18 +1517,35 @@ function renderSubjects() {
     const action = (s.locked && inTimetable)
       ? `<span title="Saved — can't be changed" aria-label="Locked" style="padding:0 .3rem">🔒</span>`
       : `<button class="btn btn-danger btn-sm btn-icon" onclick="removeSubject('${s.id}')" aria-label="Remove ${esc(s.name)}">✕</button>`;
-    return `<div class="subj-item">
+    return `<div class="subj-item${s.ignored ? " ignored" : ""}">
       <div>
-        <div class="subj-name">${esc(s.name)}</div>
+        <div class="subj-name">${esc(s.name)}${s.ignored ? ' <span class="ign-badge">Ignored</span>' : ""}</div>
         <div class="text-sm">${s.code && normName(s.code) !== normName(s.name) ? esc(s.code) + " · " : ""}${s.goal}h/week${s.locked ? "" : esc(exam)}</div>
         ${s.locked ? `<label class="text-sm" style="margin-top:.3rem">Exam date
           <input type="date" value="${esc(s.examDate || "")}" onchange="editSubject('${s.id}','examDate',this.value)" aria-label="Exam date for ${esc(s.name)}">
         </label>` : ""}
+        ${ignoreToggle(s)}
       </div>
       <span class="strength-badge ${badgeCls}">${badgeTxt}</span>
       ${action}
     </div>`;
   }).join("");
+}
+
+// "Ignore" keeps the subject (and its timetable classes) but leaves it out of the study plan
+// and weekly goals — e.g. a "Lunch" row picked up from an imported timetable.
+function ignoreToggle(s) {
+  if (s.locked) return "";          // once saved, the ignore choice can't be changed
+  return `<label class="ignore-toggle text-sm">
+    <input type="checkbox" ${s.ignored ? "checked" : ""} onchange="toggleIgnoreSubject('${s.id}', this.checked)">
+    🚫 Ignore — don't add to my study plan
+  </label>`;
+}
+function toggleIgnoreSubject(id, on) {
+  const s = state.subjects.find(x => x.id === id);
+  if (!s || s.locked) return;       // locked (saved) subjects can't change ignore
+  s.ignored = !!on;
+  regeneratePlan();                 // re-renders everything and saves
 }
 
 // Edit an imported subject — only allowed until the user presses Save
@@ -1611,7 +1563,7 @@ function editSubject(id, field, value) {
 function saveImportedSubjects() {
   const pending = state.subjects.filter(s => s.pending && !s.locked);
   if (!pending.length) return;
-  if (!confirm("Save these subjects?\n\nAfter saving you will NOT be able to change strength or weekly goal again. You can still set or change the exam date.")) return;
+  if (!confirm("Save these subjects?\n\nAfter saving you will NOT be able to change strength, weekly goal or the Ignore option again. You can still set or change the exam date.")) return;
   pending.forEach(s => { s.locked = true; s.pending = false; });
   renderSubjects();
   regeneratePlan();
@@ -1705,7 +1657,9 @@ function showPage(name) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 function goToPlan() {
-  if (!state.subjects.length) { showErr("setup-err", "Add at least one subject first, then generate your plan."); return; }
+  if (!state.subjects.some(s => !s.ignored)) { showErr("setup-err", "Add at least one subject (that isn't set to ignore) first, then generate your plan."); return; }
+  state.planGenerated = true;
+  regeneratePlan();
   showPage("plan");
 }
 
@@ -1714,7 +1668,9 @@ function goToPlan() {
 // ══════════════════════════════════════════════════════════════════════════════
 const BLOCK_MIN  = 40;
 const BREAK_MIN  = 10;
-const REST_AFTER_HOME = 30;
+const LONG_BREAK_MIN = 20;           // break after 4 study blocks in a row
+const BLOCKS_BEFORE_LONG_BREAK = 4;
+const REST_AFTER_HOME = 0;   // study begins right after travel (last class + travel home)
 const REST_BEFORE_BED = 30;
 const DAYS_RANGE = 7; // generate plan for 7 days
 
@@ -1728,7 +1684,9 @@ function getSubjectWeight(subj, dateStr) {
   const daysLeft = Math.round((ex - ref) / 86400000);
   if (daysLeft < 0) return 0;                       // exam already over on that day
   if (daysLeft > 21) return baseW;
-  return baseW + Math.round(5 * (1 - daysLeft / 21));   // up to +5 on exam eve / exam day
+  // Difficulty × urgency: a weak subject (3) with an exam tomorrow gets ~5× more time than
+  // its normal share, a strong subject (1) with the same exam gets less than a weak one.
+  return baseW * (1 + 4 * (1 - daysLeft / 21));
 }
 function examTag(subjectId, dateStr) {
   const s = state.subjects.find(x => x.id === subjectId);
@@ -1738,32 +1696,51 @@ function examTag(subjectId, dateStr) {
   return ` · 📝 ${d === 0 ? "exam today" : d === 1 ? "exam tomorrow" : "exam in " + d + " days"}`;
 }
 
+// Real classes only — subjects marked "ignore" (e.g. a Lunch row from the import) don't count.
+function isIgnoredSubject(id) { const sb = state.subjects.find(x => x.id === id); return !!(sb && sb.ignored); }
+
 function getTodayClassMinutes(dateStr) {
   const d = new Date(dateStr);
   const dName = dayName(d.getDay());
   return state.classes
-    .filter(c => c.day === dName)
+    .filter(c => c.day === dName && !isIgnoredSubject(c.subjectId))
     .reduce((sum, c) => sum + toMin(c.end) - toMin(c.start), 0);
+}
+
+function getLastClassEnd(dateStr) {
+  const dName = dayName(new Date(dateStr).getDay());
+  const ends = state.classes.filter(c => c.day === dName && !isIgnoredSubject(c.subjectId)).map(c => toMin(c.end));
+  return ends.length ? Math.max(...ends) : null;
+}
+
+// Evening plan: it starts when the student gets home = last class end + travel-home time.
+// On days with no classes it simply starts an hour after waking up.
+function getStudyStart(dateStr) {
+  const s = state.settings;
+  const last = getLastClassEnd(dateStr);
+  return last === null ? toMin(s.wake) + 60 : last + (s.travelHome || 0) + REST_AFTER_HOME;
+}
+
+function getDinnerWindow(dateStr) {
+  const s = state.settings;
+  const studyStart = getStudyStart(dateStr);
+  const studyEnd   = toMin(s.bed) - REST_BEFORE_BED;
+  const dur = s.dinnerDur || 30;
+  // Dinner at the time the user chose, kept inside the evening window.
+  // If the window is too short for dinner, fall back to the middle of it.
+  const lo = studyStart, hi = studyEnd - dur;
+  const dinnerStart = hi >= lo
+    ? Math.min(Math.max(toMin(s.dinnerTime || "20:00"), lo), hi)
+    : studyStart + Math.floor((studyEnd - studyStart) / 2);
+  return [dinnerStart, dinnerStart + dur];
 }
 
 function getStudyWindow(dateStr) {
   const s = state.settings;
-  const wakeMin = toMin(s.wake);
-  const bedMin  = toMin(s.bed);
-  // Arrive home = wake + travelTo + classTime + travelHome (approx)
-  // We use a simpler approach: studyStart = arriveHome + rest
-  // arriveHome ≈ wake + travelTo + classMins + travelHome but we don't track last-class end
-  // So: studyStart = wake + travelTo + classMins + travelHome + 30 min rest
-  const classMins = getTodayClassMinutes(dateStr);
-  const arriveHome = wakeMin + (s.travelTo||0) + classMins + (s.travelHome||0);
-  const studyStart = arriveHome + REST_AFTER_HOME;
-  const studyEnd   = bedMin - REST_BEFORE_BED;
-  // Remove dinner window (dinner duration)
-  // We'll place dinner in the middle
-  const dinnerStart = studyStart + Math.floor((studyEnd - studyStart) / 2);
-  const dinnerEnd   = dinnerStart + (s.dinnerDur || 30);
+  const studyStart = getStudyStart(dateStr);
+  const studyEnd   = toMin(s.bed) - REST_BEFORE_BED;
   if (studyEnd <= studyStart) return [];
-  // Two windows: before and after dinner
+  const [dinnerStart, dinnerEnd] = getDinnerWindow(dateStr);
   const windows = [];
   if (dinnerStart > studyStart) windows.push([studyStart, dinnerStart]);
   if (dinnerEnd < studyEnd)     windows.push([dinnerEnd, studyEnd]);
@@ -1773,10 +1750,12 @@ function getStudyWindow(dateStr) {
 function sliceIntoBlocks(windows) {
   const blocks = [];
   for (const [winStart, winEnd] of windows) {
-    let cursor = winStart;
+    let cursor = winStart, run = 0;       // run = study blocks in a row since the last long break
     while (cursor + BLOCK_MIN <= winEnd) {
+      run++;
+      const longBreak = run % BLOCKS_BEFORE_LONG_BREAK === 0;   // after every 4th block in a row
       blocks.push({ startMin: cursor, endMin: cursor + BLOCK_MIN });
-      cursor += BLOCK_MIN + BREAK_MIN;
+      cursor += BLOCK_MIN + (longBreak ? LONG_BREAK_MIN : BREAK_MIN);
     }
   }
   return blocks;
@@ -1799,9 +1778,9 @@ function getWeeklyDeficit() {
 }
 
 function assignSubjectsToBlocks(blocks, dateStr) {
-  if (!state.subjects.length || !blocks.length) return [];
+  if (!state.subjects.some(s => !s.ignored) || !blocks.length) return [];
   const deficit = getWeeklyDeficit();
-  const weights = state.subjects.map(s => {
+  const weights = state.subjects.filter(s => !s.ignored).map(s => {
     const base = getSubjectWeight(s, dateStr);
     return { id: s.id, name: s.name, w: base > 0 ? base + (deficit[s.id] || 0) * 0.5 : 0 };
   }).filter(x => x.w > 0);                           // subjects whose exam is over are left out
@@ -1828,7 +1807,7 @@ function assignSubjectsToBlocks(blocks, dateStr) {
     for (let i=0; i<a.n; i++) pool.push({ id: a.id, name: a.name });
   }
   // Shuffle with no-consecutive constraint
-  const arranged = shuffleNoConsec(pool);
+  const arranged = shuffleNoConsec(pool, dateStr);
 
   return blocks.map((blk, i) => ({
     id: `${dateStr}-${i}-${uid()}`,
@@ -1839,14 +1818,30 @@ function assignSubjectsToBlocks(blocks, dateStr) {
   }));
 }
 
-function shuffleNoConsec(arr) {
+// Seeded random numbers: same seed → same arrangement (so editing settings doesn't
+// reshuffle the plan), new seed (Regenerate button) → a different arrangement.
+function makeRng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+function shuffleNoConsec(arr, dateStr) {
   if (arr.length <= 1) return arr;
+  const rng = makeRng((state.planSeed || 0) * 7919 + hashStr(dateStr || ""));
   const out = [], pool = [...arr];
   let last = null;
   while (pool.length) {
-    // Find an item different from last
-    let idx = pool.findIndex(x => x.id !== (last && last.id));
-    if (idx === -1) idx = 0; // give up, just append
+    // Pick a random item that differs from the previous one
+    const cands = [];
+    pool.forEach((x, i) => { if (!last || x.id !== last.id) cands.push(i); });
+    const idx = cands.length ? cands[Math.floor(rng() * cands.length)] : 0; // none left → just append
     last = pool.splice(idx, 1)[0];
     out.push(last);
   }
@@ -1859,7 +1854,21 @@ function generatePlanForDate(dateStr) {
   return assignSubjectsToBlocks(blocks, dateStr);
 }
 
+// Called by the "Regenerate" button: new seed → a freshly arranged plan.
+function regenerateClick() {
+  state.planSeed = (state.planSeed || 0) + 1;
+  state.planGenerated = true;
+  regeneratePlan();
+}
+
 function regeneratePlan() {
+  // Nothing is generated until the user clicks "Generate my plan".
+  if (!state.planGenerated) {
+    state.plan = {};
+    renderAll();
+    saveUserData();
+    return;
+  }
   const newPlan = {};
   for (let i=0; i<DAYS_RANGE; i++) {
     const d = new Date(); d.setDate(d.getDate() + i);
@@ -1877,7 +1886,7 @@ function regeneratePlan() {
 function renderAll() {
   // Clean up imported subjects that are no longer in the timetable
   // (e.g. their classes were removed before this rule existed).
-  const stale = state.subjects.filter(s => (s.locked || s.pending) && !state.classes.some(c => c.subjectId === s.id));
+  const stale = state.subjects.filter(s => (s.locked || s.pending) && !s.fromExam && !state.classes.some(c => c.subjectId === s.id));
   if (stale.length) {
     const gone = new Set(stale.map(s => s.id));
     state.subjects = state.subjects.filter(s => !gone.has(s.id));
@@ -1966,23 +1975,25 @@ function renderPlanDay(dateStr, contentEl) {
   }
 
   const s = state.settings;
-  const classMins = getTodayClassMinutes(dateStr);
-  const dinnerStart = toMin(s.wake) + (s.travelTo||0) + classMins + (s.travelHome||0) + REST_AFTER_HOME +
-    Math.floor((toMin(s.bed) - REST_BEFORE_BED - (toMin(s.wake) + (s.travelTo||0) + classMins + (s.travelHome||0) + REST_AFTER_HOME)) / 2);
-  const dinnerEnd = dinnerStart + (s.dinnerDur||30);
+  const [dinnerStart, dinnerEnd] = getDinnerWindow(dateStr);
+  const lastEnd = getLastClassEnd(dateStr);
+  const startNote = lastEnd === null
+    ? `<div class="text-sm" style="margin-bottom:.5rem">🌤️ No classes — study starts at ${fromMin(blocks[0].startMin)}</div>`
+    : `<div class="text-sm" style="margin-bottom:.5rem">🏫 Last class ends ${fmt12(`${String(Math.floor(lastEnd/60)).padStart(2,"0")}:${String(lastEnd%60).padStart(2,"0")}`)}${(s.travelHome||0) ? ` · 🚌 ${s.travelHome} min travel` : ""} → study starts ${fromMin(blocks[0].startMin)}</div>`;
 
-  let html = `<div class="block-list">`;
+  let html = startNote + `<div class="block-list">`;
   let prevEnd = -1;
   for (let i=0; i<blocks.length; i++) {
     const blk = blocks[i];
     const done = !!state.completions[blk.id];
-    // Show break between blocks
+    // Show what sits between the previous block and this one: dinner, or a short/long break
     if (i > 0) {
-      html += `<div class="break-block" aria-label="10-minute break">☕ 10 min break</div>`;
-    }
-    // Show dinner if it falls between prev block and this one
-    if (prevEnd > 0 && blk.startMin >= dinnerStart && prevEnd <= dinnerStart) {
-      html += `<div class="break-block" aria-label="Dinner break">🍽️ Dinner break (~${s.dinnerDur||30} min)</div>`;
+      if (prevEnd <= dinnerStart && blk.startMin >= dinnerEnd) {
+        html += `<div class="break-block" aria-label="Dinner break">🍽️ Dinner break (~${s.dinnerDur||30} min)</div>`;
+      } else {
+        const gap = blk.startMin - prevEnd;
+        html += `<div class="break-block" aria-label="${gap}-minute break">☕ ${gap} min break${gap >= LONG_BREAK_MIN ? " — you've earned it" : ""}</div>`;
+      }
     }
     prevEnd = blk.endMin;
     html += `<div class="study-block${done ? " done" : ""}" id="blk-${blk.id}">
@@ -2064,7 +2075,7 @@ function renderTodayGoal() {
 // ══════════════════════════════════════════════════════════════════════════════
 function renderWeeklyGoals() {
   const el = $("weekly-goals-content");
-  if (!state.subjects.length) {
+  if (!state.subjects.some(s => !s.ignored)) {
     el.innerHTML = `<div class="empty"><div class="e-icon">📈</div><div class="e-title">Add subjects to track progress</div></div>`;
     return;
   }
@@ -2080,7 +2091,7 @@ function renderWeeklyGoals() {
     }
   }
 
-  el.innerHTML = state.subjects.map(s => {
+  el.innerHTML = state.subjects.filter(s => !s.ignored).map(s => {
     const goalMins = s.goal * 60;
     const done2 = doneMins[s.id] || 0;
     const pct = goalMins ? Math.min(100, done2/goalMins*100) : 0;
@@ -2644,14 +2655,20 @@ function exYearFix(iso, noYear) {                   // no year printed and date 
   if (now - d > 60 * 86400000) d.setFullYear(d.getFullYear() + 1);
   return d.toISOString().slice(0, 10);
 }
-function exMatchSubject(text) {                     // best existing subject mentioned in this line
+const EX_SKIP = /^(no\s*(exam|paper)s?|nil|holiday|study\s*leave|n\/?a)\b/i;
+function exMatchSubject(text) {                     // best existing subject for one cell of text
   const t = normName(text), c = normCode(text);
-  let best = null, bl = 0;
+  if (!t) return null;
+  let best = null, bs = 0;
   for (const s of state.subjects) {
     const n = normName(s.name);
-    if (n && n.length >= 3 && t.includes(n) && n.length > bl) { best = s; bl = n.length; }
+    let score = 0;
+    if (n && n === t) score = 1000;
+    else if (n && n.length >= 3 && t.length >= 3 && (t.includes(n) || n.includes(t))) score = 100 + Math.min(n.length, t.length);
+    else if (n.length >= 4 && t.length >= 4 && n.slice(0, 4) === t.slice(0, 4)) score = 50;   // "Maths" ~ "Mathematics"
     const k = normCode(s.code || "");
-    if (k && k.length >= 4 && c.includes(k) && k.length + 100 > bl) { best = s; bl = k.length + 100; }
+    if (k && k.length >= 4 && c.includes(k)) score = Math.max(score, 500);
+    if (score > bs) { best = s; bs = score; }
   }
   return best;
 }
@@ -2664,7 +2681,6 @@ async function handleExamFile(file) {
   try {
     if (!isPdf && !isImg) { ttStatus("Please choose a PDF or an image (JPG, PNG).", "error"); return; }
     if (file.size > 20 * 1024 * 1024) { ttStatus("That file is too large (max 20 MB).", "error"); return; }
-    if (!state.subjects.length) { ttStatus("Add your subjects (or import your class timetable) first, so exam dates can be matched to them.", "error"); return; }
     ttStatus("Opening " + file.name + "…", "", 4);
     const tokens = isPdf ? await ttPdfTokens(file) : await ttOcrTokens(await ttPrepImage(file));
     ttStatus("Finding exam dates…", "", 97);
@@ -2674,12 +2690,15 @@ async function handleExamFile(file) {
     segs.forEach(s => (byLine[s.line] = byLine[s.line] || []).push(s));
     const rows = [];
     for (const k of Object.keys(byLine).map(Number).sort((a, b) => a - b)) {
-      const text = byLine[k].sort((a, b) => a.x0 - b.x0).map(p => p.t).join(" | ");
-      const dt = exFindDate(text); if (!dt) continue;
-      const rest = text.replace(dt.match, " | ").replace(TT_RANGE_ANY, " ");
-      const sub = exMatchSubject(rest);
-      const label = rest.split("|").map(x => x.trim()).filter(x => /[A-Za-z]{3}/.test(x) && !/^(mon|tue|wed|thu|fri|sat|sun)[a-z]*$/i.test(x)).join(" · ");
-      rows.push({ date: dt.iso, text: label, subjectId: sub ? sub.id : "" });
+      const parts = byLine[k].sort((a, b) => a.x0 - b.x0);
+      const dt = exFindDate(parts.map(p => p.t).join(" | ")); if (!dt) continue;
+      // Every other cell on a dated row is its own exam (one row per session/subject)
+      const cells = parts.map(p => p.t.replace(dt.match, " ").replace(/\s+/g, " ").trim())
+        .filter(x => /[A-Za-z]{3}/.test(x) && !/^(mon|tue|wed|thu|fri|sat|sun)[a-z]*\.?,?$/i.test(x) && !EX_SKIP.test(x));
+      for (const cell of cells) {
+        const sub = exMatchSubject(cell);
+        rows.push({ date: dt.iso, text: cell, subjectId: sub ? sub.id : "__new__" });
+      }
     }
     if (!rows.length) { ttStatus("Couldn't find any exam dates in this file. A clear PDF with selectable text works best — or set exam dates manually.", "error"); return; }
     ttStatus("Found " + rows.length + " exam row" + (rows.length > 1 ? "s" : "") + " — please review.", "");
@@ -2690,7 +2709,7 @@ async function handleExamFile(file) {
   } finally { _ttUI = { s: "tt-status", b: "tt-bar" }; }
 }
 function exRender() {
-  const opts = sel => `<option value="">— skip —</option>` + state.subjects.map(s => `<option value="${s.id}"${s.id === sel ? " selected" : ""}>${esc(s.name)}</option>`).join("");
+  const opts = sel => `<option value="">— skip —</option><option value="__new__"${sel === "__new__" ? " selected" : ""}>＋ Add as new subject</option>` + state.subjects.map(s => `<option value="${s.id}"${s.id === sel ? " selected" : ""}>${esc(s.name)}</option>`).join("");
   $("ex-rows").innerHTML =
     `<div class="ex-row ex-hdr"><span>Date</span><span>Found in file</span><span>Subject</span><span></span></div>` +
     _exRows.map((r, i) => `<div class="ex-row">
@@ -2707,18 +2726,133 @@ function exApply() {
   const use = _exRows.filter(r => r.subjectId && r.date);
   if (!use.length) { showErr("ex-err", "Pick a subject for at least one row."); return; }
   const byId = {};                                   // several dates for one subject → keep the earliest
-  use.forEach(r => { if (!byId[r.subjectId] || r.date < byId[r.subjectId]) byId[r.subjectId] = r.date; });
+  const created = {};                                // new subjects made from this file, shared across rows
+  let newCount = 0;
+  use.forEach(r => {
+    let id = r.subjectId;
+    if (id === "__new__") {
+      const name = (r.text || "").replace(/\s+/g, " ").trim();
+      if (!name) return;
+      const dup = findDuplicateSubject(name, extractCode(name));
+      if (dup) id = dup.id;
+      else if (created[normName(name)]) id = created[normName(name)];
+      else {
+        id = uid(); created[normName(name)] = id; newCount++;
+        // pending → user sets strength / weekly goal, then presses Save subjects
+        state.subjects.push({ id, name, code: extractCode(name), strength: "average", goal: 3, examDate: null, pending: true, locked: false, fromExam: true });
+      }
+    }
+    if (!byId[id] || r.date < byId[id]) byId[id] = r.date;
+  });
   Object.entries(byId).forEach(([id, date]) => { const s = state.subjects.find(x => x.id === id); if (s) s.examDate = date; });
   exClose();
   renderSubjects();
   regeneratePlan();                                  // rearranges the study plan around the new exams
   saveUserData();
   _ttUI = { s: "ex-status", b: "ex-bar" };
-  ttStatus(`✅ Exam dates set for ${Object.keys(byId).length} subject${Object.keys(byId).length > 1 ? "s" : ""} — study plan rearranged.`, "");
+  const n = Object.keys(byId).length;
+  ttStatus(`✅ Exam dates set for ${n} subject${n > 1 ? "s" : ""}` + (newCount ? ` (${newCount} new — set their strength and weekly goal under Subjects, then press Save)` : "") + ". " + (state.planGenerated
+    ? "Your study plan was rebuilt by days left and difficulty — subjects with closer exams and weaker strength get more time."
+    : "Press Generate my plan and it will be arranged by days left and difficulty."), "");
   _ttUI = { s: "tt-status", b: "tt-bar" };
 }
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("ex-modal").classList.contains("hidden")) exClose(); });
+// ══════════════════════════════════════════════════════════════════════════════
+//  PROFILE
+// ══════════════════════════════════════════════════════════════════════════════
+const PF_AVATARS = ["👤","🎓","📚","🦊","🐼","🚀","🌟","🔥","🎧","🌈"];
+const pfKeyId = () => (window._currentUser ? window._currentUser.uid : "local");
+function pfAvatar() { try { return localStorage.getItem("ltp-avatar-" + pfKeyId()) || "👤"; } catch (_) { return "👤"; } }
+function pfName() {
+  const u = window._currentUser;
+  if (u) return u.displayName || (u.email ? u.email.split("@")[0] : "Student");
+  try { return localStorage.getItem("ltp-local-name") || "Guest"; } catch (_) { return "Guest"; }
+}
+function refreshTopbarAvatar() { const el = $("topbar-avatar-emoji"); if (el) el.textContent = pfAvatar(); }
 
+function pfStats() {
+  const ws = getWeekStart();
+  let weekDone = 0;
+  for (const d of Object.keys(state.plan)) {
+    if (d < ws) continue;
+    (state.plan[d] || []).forEach(b => { if (state.completions[b.id]) weekDone++; });
+  }
+  return {
+    subjects: state.subjects.filter(s => !s.ignored).length,
+    classes: state.classes.length,
+    weekHours: (weekDone * BLOCK_MIN / 60).toFixed(1),
+    totalBlocks: Object.keys(state.completions).length,
+  };
+}
+
+function openProfileModal() {
+  const u = window._currentUser;
+  const st = pfStats();
+  const since = u && u.metadata && u.metadata.creationTime
+    ? new Date(u.metadata.creationTime).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : null;
+  const email = u ? u.email : "Local mode · data saved on this device";
+  const cur = pfAvatar();
+  $("pf-box").innerHTML = `
+    <div class="pf-top">
+      <div class="pf-avatar" id="pf-big-av" aria-hidden="true">${esc(cur)}</div>
+      <h3 class="pf-name" id="pf-title">${esc(pfName())}</h3>
+      <div class="pf-sub">${esc(email)}</div>
+      ${since ? `<div class="pf-sub">Member since ${esc(since)}</div>` : ""}
+    </div>
+    <div class="pf-stats">
+      <div class="pf-stat"><b>${st.subjects}</b><span>Subjects</span></div>
+      <div class="pf-stat"><b>${st.classes}</b><span>Classes / week</span></div>
+      <div class="pf-stat"><b>${st.weekHours}h</b><span>Studied this week</span></div>
+      <div class="pf-stat"><b>${st.totalBlocks}</b><span>Blocks completed</span></div>
+    </div>
+    <h4>Avatar</h4>
+    <div class="pf-avatars" role="group" aria-label="Choose avatar">
+      ${PF_AVATARS.map(a => `<button type="button" class="pf-av" aria-pressed="${a === cur}" aria-label="Avatar ${a}" onclick="pfPickAvatar('${a}')">${a}</button>`).join("")}
+    </div>
+    <h4>Display name</h4>
+    <div class="pf-edit">
+      <input type="text" id="pf-name-input" maxlength="30" value="${esc(pfName())}" aria-label="Display name">
+      <button type="button" class="btn btn-primary btn-sm" onclick="pfSaveName()">Save</button>
+    </div>
+    <div class="pf-msg" id="pf-msg" role="status" aria-live="polite"></div>
+    <div class="pf-foot">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeProfileModal()">Close</button>
+      <button type="button" class="btn btn-danger btn-sm" onclick="closeProfileModal(); doSignOut()">Sign out</button>
+    </div>`;
+  $("pf-modal").classList.remove("hidden");
+  $("pf-box").querySelector(".pf-foot .btn-ghost").focus();
+}
+function closeProfileModal() {
+  $("pf-modal").classList.add("hidden");
+  const b = $("topbar-profile-btn"); if (b) b.focus();
+}
+function pfMsg(text, err) { const m = $("pf-msg"); m.textContent = text; m.classList.toggle("error", !!err); }
+
+function pfPickAvatar(a) {
+  try { localStorage.setItem("ltp-avatar-" + pfKeyId(), a); } catch (_) {}
+  $("pf-big-av").textContent = a;
+  document.querySelectorAll("#pf-modal .pf-av").forEach(b => b.setAttribute("aria-pressed", String(b.textContent === a)));
+  refreshTopbarAvatar();
+}
+
+async function pfSaveName() {
+  const name = $("pf-name-input").value.trim().replace(/\s+/g, " ");
+  if (name.length < 2) { pfMsg("Name must be at least 2 characters.", true); return; }
+  try {
+    const u = window._currentUser;
+    if (u) await getFirebase().updateProfile(u, { displayName: name });
+    else localStorage.setItem("ltp-local-name", name);
+    $("pf-title").textContent = name;
+    pfMsg("Saved ✓", false);
+  } catch (err) {
+    console.warn(err);
+    pfMsg("Couldn't save your name. Please try again.", true);
+  }
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && !$("pf-modal").classList.contains("hidden")) closeProfileModal();
+});
 function showErr(id, msg) {
   const el = $(id); el.textContent = msg; el.classList.remove("hidden");
 }
@@ -2752,251 +2886,6 @@ setTimeout(() => {
     };
   }
 }, 4000);
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  PROFILE MODAL
-// ══════════════════════════════════════════════════════════════════════════════
-
-/** Avatar: stored as a data-URL in localStorage under "ltp-avatar" */
-function loadAvatar() {
-  const av = localStorage.getItem("ltp-avatar");
-  updateAvatarUI(av);
-}
-
-function updateAvatarUI(dataUrl) {
-  const imgModal = $("prof-avatar-img");
-  const emojiModal = $("prof-avatar-emoji-modal");
-  const topBtn = $("topbar-profile-btn");
-  const topEmoji = $("topbar-avatar-emoji");
-  if (dataUrl) {
-    imgModal.src = dataUrl; imgModal.style.display = "block";
-    emojiModal.style.display = "none";
-    // Topbar: show image
-    let topImg = topBtn.querySelector("img");
-    if (!topImg) { topImg = document.createElement("img"); topBtn.appendChild(topImg); }
-    topImg.src = dataUrl; topImg.style.display = "block";
-    topEmoji.style.display = "none";
-  } else {
-    imgModal.style.display = "none"; emojiModal.style.display = "";
-    const topImg = topBtn.querySelector("img");
-    if (topImg) topImg.style.display = "none";
-    topEmoji.style.display = "";
-  }
-}
-
-function handleAvatarUpload(file) {
-  if (!file) return;
-  if (file.size > 2 * 1024 * 1024) { alert("Image too large (max 2 MB). Please choose a smaller photo."); return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    // Resize to max 200×200 for storage efficiency
-    const img = new Image();
-    img.onload = () => {
-      const size = 200, c = document.createElement("canvas");
-      c.width = size; c.height = size;
-      const ctx = c.getContext("2d");
-      const scale = Math.min(size / img.width, size / img.height);
-      const w = img.width * scale, h = img.height * scale;
-      ctx.fillStyle = "#070b1c"; ctx.fillRect(0, 0, size, size);
-      ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-      const dataUrl = c.toDataURL("image/jpeg", .85);
-      localStorage.setItem("ltp-avatar", dataUrl);
-      updateAvatarUI(dataUrl);
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-/** Compute current streak (consecutive days with at least 1 block completed) */
-function computeStreak() {
-  let streak = 0;
-  const d = new Date(); d.setHours(0,0,0,0);
-  for (let i = 0; i < 365; i++) {
-    const dateStr = d.toISOString().slice(0,10);
-    d.setDate(d.getDate() - 1);
-    const blocks = state.plan[dateStr] || [];
-    if (!blocks.length) { if (i === 0) continue; break; }     // today with no plan doesn't break streak
-    const anyDone = blocks.some(b => state.completions[b.id]);
-    if (!anyDone) { if (i === 0) continue; break; }
-    streak++;
-  }
-  return streak;
-}
-
-/** Weekly stats */
-function weeklyStats() {
-  const ws = getWeekStart();
-  let done = 0;
-  for (const dateStr of Object.keys(state.plan)) {
-    if (dateStr < ws) continue;
-    for (const blk of (state.plan[dateStr] || [])) {
-      if (state.completions[blk.id]) done++;
-    }
-  }
-  const hrs = (done * 40 / 60).toFixed(1);
-  return { done, hrs };
-}
-
-/** Bytes of localStorage used */
-function storageUsed() {
-  let bytes = 0;
-  try {
-    for (const k of Object.keys(localStorage)) {
-      bytes += (localStorage.getItem(k) || "").length * 2;   // UTF-16 ≈ 2 bytes/char
-    }
-  } catch(_) {}
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-}
-
-/** Subject studied most this week */
-function topSubjectThisWeek() {
-  const ws = getWeekStart();
-  const mins = {};
-  for (const dateStr of Object.keys(state.plan)) {
-    if (dateStr < ws) continue;
-    for (const blk of (state.plan[dateStr] || [])) {
-      if (blk.subjectId && state.completions[blk.id]) {
-        mins[blk.subjectId] = (mins[blk.subjectId] || 0) + 40;
-      }
-    }
-  }
-  const best = Object.entries(mins).sort((a,b) => b[1] - a[1])[0];
-  if (!best) return null;
-  const sub = state.subjects.find(s => s.id === best[0]);
-  return sub ? { name: sub.name, mins: best[1] } : null;
-}
-
-/** Format an ISO date string as "26 Nov 2026" */
-function formatDate(isoStr) {
-  if (!isoStr) return "—";
-  const d = new Date(isoStr);
-  return d.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
-}
-
-function openProfileModal() {
-  const user = window._currentUser;
-  const isLocal = !!window._localMode || !user;
-
-  // ── Avatar ──────────────────────────────────────────────────────────
-  loadAvatar();
-
-  // ── Display name ────────────────────────────────────────────────────
-  const displayName = user && user.displayName ? user.displayName : (isLocal ? "Local User" : "—");
-  $("prof-display-name") && ($("prof-display-name").textContent = displayName);  // header
-  // the header .prof-name uses id="prof-modal-title" which also works as the display name label
-  document.querySelector("#profile-modal .prof-name").textContent = displayName;
-  $("prof-edit-name").value = displayName;
-
-  // ── Email + mode badge ───────────────────────────────────────────────
-  const email = user ? user.email : "Local mode — no account";
-  $("prof-modal-email").textContent = email;
-  $("prof-info-email").textContent = email;
-  $("prof-modal-mode").innerHTML = isLocal
-    ? "🔒 Local mode"
-    : "🌐 Cloud account";
-
-  // ── Member since ────────────────────────────────────────────────────
-  const since = user && user.metadata && user.metadata.creationTime
-    ? formatDate(new Date(user.metadata.creationTime).toISOString().slice(0,10))
-    : "—";
-  $("prof-info-since").textContent = since;
-
-  // ── Storage ─────────────────────────────────────────────────────────
-  $("prof-info-storage").textContent = storageUsed() + " (local)";
-
-  // ── Schedule summary ─────────────────────────────────────────────────
-  const s = state.settings;
-  $("prof-info-schedule").textContent =
-    `${fmt12(s.wake || "06:30")} – ${fmt12(s.bed || "22:30")}`;
-
-  // ── Commute ──────────────────────────────────────────────────────────
-  $("prof-info-commute").textContent =
-    `${s.travelTo || 0} min to + ${s.travelHome || 0} min home`;
-
-  // ── Streak ───────────────────────────────────────────────────────────
-  const streak = computeStreak();
-  $("prof-streak-txt").textContent =
-    streak === 0 ? "No streak yet — start studying!" :
-    streak === 1 ? "🔥 1-day streak — keep going!" :
-    `🔥 ${streak}-day streak — awesome!`;
-
-  // ── Weekly stats ─────────────────────────────────────────────────────
-  const { done, hrs } = weeklyStats();
-  $("prof-stat-done").textContent = done;
-  $("prof-stat-hrs").textContent = hrs + "h";
-  $("prof-stat-subj").textContent = state.subjects.length;
-  $("prof-stat-classes").textContent = state.classes.length;
-
-  // ── Top subject ───────────────────────────────────────────────────────
-  const top = topSubjectThisWeek();
-  if (top) {
-    $("prof-top-subj").innerHTML =
-      `<div style="display:flex;align-items:center;gap:.5rem;background:#0c1330;border:1px solid rgba(45,226,230,.25);border-radius:8px;padding:.5rem .8rem">
-        <span style="font-size:1.3rem">🏆</span>
-        <div>
-          <div style="font-weight:700;font-size:.88rem">${esc(top.name)}</div>
-          <div style="font-size:.74rem;color:#9fb9c6">${(top.mins/60).toFixed(1)}h studied this week</div>
-        </div>
-      </div>`;
-    $("prof-top-subj-section").style.display = "";
-  } else {
-    $("prof-top-subj-section").style.display = "none";
-  }
-
-  // ── Clear saved msg & show modal ────────────────────────────────────
-  $("prof-saved-msg").style.display = "none";
-  $("profile-modal").classList.remove("hidden");
-  document.addEventListener("keydown", profEscListener);
-}
-
-function closeProfileModal() {
-  $("profile-modal").classList.add("hidden");
-  document.removeEventListener("keydown", profEscListener);
-}
-
-function profEscListener(e) {
-  if (e.key === "Escape") closeProfileModal();
-}
-
-// Close modal on backdrop click
-$("profile-modal").addEventListener("click", function(e) {
-  if (e.target === this) closeProfileModal();
-});
-
-async function saveProfileChanges() {
-  const newName = $("prof-edit-name").value.trim();
-  if (!newName) { $("prof-edit-name").focus(); return; }
-
-  // Update Firebase display name if logged in
-  if (window._currentUser && window._firebase) {
-    try {
-      const fb = getFirebase();
-      await fb.updateProfile(fb.auth.currentUser, { displayName: newName });
-    } catch(e) { console.warn("Could not update Firebase display name:", e); }
-  }
-
-  // Update UI
-  document.querySelector("#profile-modal .prof-name").textContent = newName;
-  localStorage.setItem("ltp-display-name", newName);
-
-  // Briefly show saved message
-  const msg = $("prof-saved-msg");
-  msg.style.display = "block";
-  setTimeout(() => { msg.style.display = "none"; }, 2500);
-}
-
-function confirmSignOut() {
-  if (confirm("Sign out from Leftover Time Planner?")) {
-    closeProfileModal();
-    doSignOut();
-  }
-}
-
-// Load avatar on page ready
-loadAvatar();
 </script>
 </body>
 </html>
